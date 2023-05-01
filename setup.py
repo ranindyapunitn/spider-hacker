@@ -1,4 +1,5 @@
-import setuptools
+import pathlib
+from setuptools import find_packages, setup
 
 setup(
     name="vuln-tracker-c",
