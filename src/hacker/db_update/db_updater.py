@@ -1,10 +1,10 @@
 from gevent import monkey as curious_george
 curious_george.patch_all(thread=False, select=False)
-from definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
-from db_manager.db_manager import DbManager
-from hacker.db_update.cve_populator import CvePopulator
-from hacker.db_update.link_collector import LinkCollector
-from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from src.definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
+from src.db_manager.db_manager import DbManager
+from src.hacker.db_update.cve_populator import CvePopulator
+from src.hacker.db_update.link_collector import LinkCollector
+from src.table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
 import re
 import sys
 import time

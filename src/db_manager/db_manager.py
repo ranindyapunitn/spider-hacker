@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import errorcode
-from db_manager.queries import Queries
+from src.db_manager.queries import Queries
 
 
 """
