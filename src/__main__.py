@@ -6,6 +6,7 @@ from src.hacker.db_delete.db_deleter import DbDeleter
 from src.hacker.db_dump.db_dumper import DbDumper
 from wakepy import set_keepawake, unset_keepawake
 import argparse
+import time
 
 
 def main():
@@ -41,7 +42,8 @@ def main():
             updater.populate_cve_cache(False)
 
         resp = input("Cache populated. Do you wish to update the database? [y/n]")
-        while resp != "y" or resp != "n":
+        while (resp != "y" and resp != "n"):
+            print(resp)
             resp = input("Please prompt a valid answer. Do you wish to update the database? [y/n]")
 
         if resp == "y":

@@ -229,7 +229,7 @@ class DbUpdater:
         
             self.__batch_update_tables(self.__batch_populate_cve_list(cve_batch))
 
-            print("Batch " + str(index) + "/" + str + str(batches_remaining) + " updated!")
+            print("Batch " + str(index) + "/" + str(batches_remaining) + " updated!")
 
     def populate_cve_cache(self, clear_cache):
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)

@@ -1,5 +1,5 @@
-from hacker.db_update.db_updater import DbUpdater
-from hacker.db_create.db_creator import DbCreator
+#from hacker.db_update.db_updater import DbUpdater
+#from hacker.db_create.db_creator import DbCreator
 from wakepy import set_keepawake, unset_keepawake
 import time
 
@@ -9,10 +9,14 @@ def test():
 
     #creator = DbCreator('localhost', 'root', 'root', 'test')
     #creator.create_db()
+    resp = str(input("Cache populated. Do you wish to update the database? [y/n]"))
+    while (resp != "y" and resp != "n"):
+        print(resp)
+        resp = str(input("Please prompt a valid answer. Do you wish to update the database? [y/n]"))
 
-    updater = DbUpdater('localhost', 'root', 'root', 'test')
+    #updater = DbUpdater('localhost', 'root', 'root', 'test')
     #updater.populate_cve_cache(True)
-    updater.update_db()
+    #updater.update_db()
 
         #with open("C:\\Users\\micha\\Documents\\output.txt", "a", encoding="utf-8") as f:
             #for vuln in cve_list:
