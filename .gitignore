@@ -1,0 +1,11 @@
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+spider-hacker.sublime-workspace
+spider-hacker.sublime-project/
+*.pyc
+venv_spider-hacker/
+*.sublime-project
+*.sublime-workspace
+src/geckodriver.log
