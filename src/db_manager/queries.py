@@ -103,10 +103,11 @@ class Queries:
     @classmethod
     def create_table_nvd_tags(cls):
         return """CREATE TABLE {}.`NVD_TAGS` (
+            `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `HYPERLINK_ID`                       NVARCHAR(512)   NOT NULL,
             `TAG_DESCRIPTION`                    TEXT            NULL,
-            PRIMARY KEY (`VULNERABILITY_ID`, `HYPERLINK_ID`)
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod

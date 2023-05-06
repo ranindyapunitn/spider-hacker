@@ -27,9 +27,6 @@ class DbManager:
         tables["nvd_hyperlinks"] = (Queries.create_table_nvd_hyperlinks())
         tables["nvd_tags"] = (Queries.create_table_nvd_tags())
         tables["nvd_weakness_enumeration"] = (Queries.create_table_nvd_weakness_enumeration())
-        tables["nvd_affected_configurations"] = (Queries.create_table_nvd_affected_configurations())
-        tables["nvd_affected_configurations_description"] = (Queries.create_table_nvd_affected_configurations_description())
-        tables["nvd_matching_cpes"] = (Queries.create_table_nvd_matching_cpes())
         tables["cvedetails_affected_products"] = (Queries.create_table_cvedetails_affected_products())
         tables["cvedetails_affected_versions_by_product"] = (Queries.create_table_cvedetails_affected_versions_by_product())
         tables["cvedetails_hyperlinks"] = (Queries.create_table_cvedetails_hyperlinks())
@@ -41,7 +38,6 @@ class DbManager:
         tables["jira_attachments"] = (Queries.create_table_jira_attachments())
         tables["jira_issue_links"] = (Queries.create_table_jira_issue_links())
 
-        # TODO: ADD ERROR CATCHING FOR FAILED CONNECTION
         try:
             cursor = self.connection.cursor()
             cursor.execute(Queries.drop_old_schema().format(self.schema_name))
@@ -49,7 +45,7 @@ class DbManager:
 
             for table_name in tables:
                 table_query = tables[table_name]
-                print("Creating table {}".format(table_name), end='\n')
+                print("    Creating table {}".format(table_name), end='\n')
                 cursor.execute(table_query.format(self.schema_name))
         except mysql.connector.Error as err:
             print(err.msg)
@@ -57,7 +53,6 @@ class DbManager:
         cursor.close()
 
     def delete_db(self):
-        # TODO: ADD ERROR CATCHING FOR FAILED CONNECTION
         try:
             cursor = self.connection.cursor()
             cursor.execute(Queries.drop_old_schema().format(self.schema_name))
@@ -67,7 +62,6 @@ class DbManager:
         cursor.close()
 
     def get_cve_list(self):
-        # TODO: ADD ERROR CATCHING FOR FAILED CONNECTION
         cves = []
         try:
             cursor = self.connection.cursor()
@@ -98,7 +92,6 @@ class DbManager:
         cursor.close()
 
     def get_cve_to_download(self):
-        # TODO: ADD ERROR CATCHING FOR FAILED CONNECTION
         cves = []
         try:
             cursor = self.connection.cursor()
@@ -132,7 +125,6 @@ class DbManager:
         cursor.close()
 
     def delete_cache(self):
-        # TODO: ADD ERROR CATCHING FOR FAILED CONNECTION
         try:
             cursor = self.connection.cursor()
             cursor.execute(Queries.delete_cache().format(self.schema_name))

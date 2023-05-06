@@ -1,5 +1,6 @@
 from gevent import monkey as curious_george
 curious_george.patch_all(thread=False, select=False)
+import grequests
 from definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
 from db_manager.db_manager import DbManager
 from hacker.db_update.cve_populator import CvePopulator
@@ -30,33 +31,28 @@ class DbUpdater:
         self.password = password
         self.schema_name = schema_name
 
-    def __batch_populate_cve_list(self, cves, inner_bar):
+    def __batch_populate_cve_list(self, cves):
         populator = CvePopulator()
 
+        vuln_list = []
         cve_list = []
+        nvd_links = []
+        nvd_data = []
+        cvedetails_links = []
+        cvedetails_data = []
+        snyk_data = []
+        jira_links = []
+        jira_data = []
+
         for cve in cves:
-            vuln = VulnerabilityInfo()
-            vuln.cve = cve["cve"]
+            cve_list.append(cve["cve"])
             if cve["nvd"] != "":
-                #print("NVD POPULATE")
-                try:
-                    req = requests.get(cve["nvd"], timeout=REQUESTS_TIMEOUT)
-                    soup = BeautifulSoup(req.text, "lxml")
-                    vuln.nvd_data = populator.populate_nvd_data(soup)
-                except:
-                    pass 
-                inner_bar()
+                nvd_links.append(cve["nvd"])
             if cve["cvedetails"] != "":
-                #print("CVEDETAILS POPULATE")
-                try:
-                    req = requests.get(cve["cvedetails"], timeout=REQUESTS_TIMEOUT)
-                    soup = BeautifulSoup(req.text, "lxml")
-                    vuln.cvedetails_data = populator.populate_cvedetails_data(soup)
-                except:
-                    pass
-                inner_bar()
+                cvedetails_links.append(cve["cvedetails"])
+            # Multithread requests are not used with snyk because manual clicking is needed
             if cve["snyk"] != "":
-                #print("SNYK POPULATE")
+                pass
                 driver_exe = 'chromedriver'
                 options = Options()
                 options.add_argument("--headless")
@@ -78,23 +74,63 @@ class DbUpdater:
                 except TimeoutException:
                     pass
 
-                vuln.snyk_data = populator.populate_snyk_data(soup)
-
-                inner_bar()
+                snyk_data.append({"cve": cve, "soup": populator.populate_snyk_data(soup)})
             if cve["jira"] != "":
-                #print("JIRA POPULATE")
-                try:
-                    req = requests.get(cve["jira"], timeout=REQUESTS_TIMEOUT)
-                    soup = BeautifulSoup(req.text, "lxml")
-                    vuln.jira_data = populator.populate_jira_data(soup)
-                except:
-                    pass
+                jira_links.append(cve["jira"])
 
-                inner_bar()
+        try:
+            nvd_results = grequests.map((grequests.get(u) for u in nvd_links), size=10)
+            for page in nvd_results:
+                soup = BeautifulSoup(page.text, "lxml")
+                cve = soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}).string.strip()
+                nvd_data.append({"cve" : cve, "data" : populator.populate_nvd_data(soup)})
+        except:
+            pass
 
-            cve_list.append(vuln)
+        try:
+            cvedetails_results = grequests.map((grequests.get(u) for u in cvedetails_links), size=10)
+            for page in cvedetails_results:
+                soup = BeautifulSoup(page.text, "lxml")
+                h1 = soup.find("h1")
+                cve = h1.find("a").contents[0].strip()
+                cvedetails_data.append({"cve" : cve, "data" : populator.populate_cvedetails_data(soup)})           
+        except:
+            pass
 
-        return cve_list
+        try:
+            jira_results = grequests.map((grequests.get(u) for u in jira_links), size=10)
+            for page in jira_results:
+                soup = BeautifulSoup(page.text, "lxml")
+                cve = ""
+                issue_details = soup.find("ul", id="issuedetails")
+                issue_elements = []
+                if issue_details:
+                    issue_elements = issue_details.findAll("li")
+                if len(issue_elements) > 7:
+                    label_containers = issue_elements[7].findAll("li")
+                    for container in label_containers:
+                        if "CVE" in container.find("span").contents[0].strip():
+                            cve = container.find("span").contents[0].strip()
+
+            jira_data.append({"cve" : cve, "data" : populator.populate_jira_data(soup)})
+        except:
+            pass
+
+        for cve in cve_list:
+            vuln = VulnerabilityInfo()
+            vuln.cve = cve
+            if any(x["cve"] == cve for x in nvd_data):
+                vuln.nvd_data = next(x["data"] for x in nvd_data if x["cve"] == cve)
+            if any(x["cve"] == cve for x in cvedetails_data):
+                vuln.cvedetails_data = next(x["data"] for x in cvedetails_data if x["cve"] == cve)
+            if any(x["cve"] == cve for x in snyk_data):
+                vuln.snyk_data = next(x["data"] for x in snyk_data if x["cve"] == cve)
+            if any(x["cve"] == cve for x in jira_data):
+                vuln.jira_data = next(x["data"] for x in jira_data if x["cve"] == cve)
+
+            vuln_list.append(vuln)
+
+        return vuln_list
 
     def __batch_update_tables(self, cve_batch):
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)
@@ -226,26 +262,20 @@ class DbUpdater:
     def __insert_cve_objects(self, cve_list):
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)
 
-        index = 1
         print("CVEs to download:", len(cve_list))
-        batches = math.ceil(len(cve_list) / 100)
-        while(len(cve_list) > 0):         
-            print("Downloading batch " + str(index) + " of " + str(batches) + "... " + "(" + str(math.floor(index * 100 / batches)) + "%" + " completed)")
-            cve_batch = cve_list[0:BATCH_SIZE] if len(cve_list) >= BATCH_SIZE else cve_list
-            cve_list = cve_list[BATCH_SIZE:] if len (cve_list) >= BATCH_SIZE else []
+        batches = math.ceil(len(cve_list) / BATCH_SIZE)
+        print("Downloading batches...")
+        with alive_bar(batches) as bar:
+            while(len(cve_list) > 0):         
+                cve_batch = cve_list[0:BATCH_SIZE] if len(cve_list) >= BATCH_SIZE else cve_list
+                cve_list = cve_list[BATCH_SIZE:] if len (cve_list) >= BATCH_SIZE else []
         
-            with alive_bar(BATCH_SIZE) as bar:
-                self.__batch_update_tables(self.__batch_populate_cve_list(cve_batch, bar))
+                self.__batch_update_tables(self.__batch_populate_cve_list(cve_batch))
 
-            index = index + 1
-
-            sys.stdout.write("\033[F")
-            sys.stdout.write("\033[F")
+                bar()
 
     def populate_cve_cache(self, clear_cache):
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)
-
-        print("Populating cve cache...")
 
         if clear_cache:
             manager.delete_cache()
