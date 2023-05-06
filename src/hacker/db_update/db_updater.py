@@ -1,10 +1,10 @@
 from gevent import monkey as curious_george
 curious_george.patch_all(thread=False, select=False)
-from src.definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
-from src.db_manager.db_manager import DbManager
-from src.hacker.db_update.cve_populator import CvePopulator
-from src.hacker.db_update.link_collector import LinkCollector
-from src.table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
+from db_manager.db_manager import DbManager
+from hacker.db_update.cve_populator import CvePopulator
+from hacker.db_update.link_collector import LinkCollector
+from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
 import re
 import sys
 import time
@@ -223,7 +223,6 @@ class DbUpdater:
         while(len(cve_list) > 0):
             print("CVEs to update: ", len(cve_list))
             batches_remaining = math.ceil(len(cve_list) / BATCH_SIZE)
-            #print("batch 1, size: ", BATCH_SIZE if BATCH_SIZE <= len(cve_list) else len(cve_list))
             cve_batch = cve_list[0:BATCH_SIZE] if len(cve_list) >= BATCH_SIZE else cve_list
             cve_list = cve_list[BATCH_SIZE:] if len (cve_list) >= BATCH_SIZE else []
         
@@ -260,10 +259,7 @@ class DbUpdater:
             cves_to_insert.append(temp_cve)
 
         cves_already_present = [cve["cve"] for cve in manager.get_cve_list()]
-        #print(cves_already_present)
-
         unique_cve_to_insert = [cve for cve in cves_to_insert if cve[0] not in cves_already_present]
-        #print(unique_cve_to_insert)
         manager.insert_cve_to_download(unique_cve_to_insert)
 
         print("cache populated!")

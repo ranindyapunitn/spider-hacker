@@ -1,6 +1,8 @@
 import mysql.connector
+import sys
+from mysql.connector.errors import DatabaseError
 from mysql.connector import errorcode
-from src.db_manager.queries import Queries
+from db_manager.queries import Queries
 
 
 """
@@ -10,7 +12,12 @@ This class contains all the methods that directly read/write to database
 class DbManager:
 
     def __init__(self, hostname, user, password, schema_name):
-        self.connection = mysql.connector.connect(host=hostname, user=user, password=password)
+        try:
+            self.connection = mysql.connector.connect(host=hostname, user=user, password=password)
+        except DatabaseError as ex:
+            print(ex)
+            sys.exit()
+
         self.schema_name = schema_name
 
     def create_new_db(self):

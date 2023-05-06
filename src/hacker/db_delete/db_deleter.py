@@ -1,4 +1,4 @@
-from src.db_manager.db_manager import DbManager
+from db_manager.db_manager import DbManager
 
 class DbDeleter:
 

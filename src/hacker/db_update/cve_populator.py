@@ -1,13 +1,13 @@
-from src.table_objects.nvd.nvd_data import NvdData
-from src.table_objects.nvd.nvd_hyperlink import NvdHyperlink
-from src.table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
-from src.table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
-from src.table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
-from src.table_objects.cvedetails.cvedetails_data import CvedetailsData
-from src.table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
-from src.table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
-from src.table_objects.snyk.snyk_data import SnykData
-from src.table_objects.jira.jira_data import JiraData
+from table_objects.nvd.nvd_data import NvdData
+from table_objects.nvd.nvd_hyperlink import NvdHyperlink
+from table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
+from table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
+from table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
+from table_objects.cvedetails.cvedetails_data import CvedetailsData
+from table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
+from table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
+from table_objects.snyk.snyk_data import SnykData
+from table_objects.jira.jira_data import JiraData
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
@@ -73,7 +73,7 @@ class CvePopulator:
         cwe_sources = soup.findAll(attrs={"data-testid": re.compile(r"^vuln-cwes-assigner")})[1::2]      
         for i in range(len(cwe_elements)):      
             if i % 2 == 0:
-                weakness_enumeration = NvdWeaknessEnumeration
+                weakness_enumeration = NvdWeaknessEnumeration()
                 if cwe_elements[i].find("a", href=True):
                     weakness_enumeration.cwe_id = cwe_elements[i].find("a", href=True).string
                 if len(cwe_elements) > i + 1:

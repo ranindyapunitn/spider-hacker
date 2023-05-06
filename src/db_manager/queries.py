@@ -95,25 +95,18 @@ class Queries:
     @classmethod
     def create_table_nvd_hyperlinks(cls):
         return  """CREATE TABLE {}.`NVD_HYPERLINKS` (
-            `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `LINK`                               NVARCHAR(512)   NOT NULL,
-            #UNIQUE(`LINK`),
-            PRIMARY KEY (`ID`)
-            #CONSTRAINT `VULNERABILITIES_NVD_HYPERLINKS` FOREIGN KEY (`VULNERABILITY_ID`) 
-                #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`VULNERABILITY_ID`, `LINK`)
             )"""
 
     @classmethod
     def create_table_nvd_tags(cls):
         return """CREATE TABLE {}.`NVD_TAGS` (
-            `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `HYPERLINK_ID`                       NVARCHAR(512)   NOT NULL,
             `TAG_DESCRIPTION`                    TEXT            NULL,
-            PRIMARY KEY (`ID`)
-            #CONSTRAINT `NVD_HYPERLINKS_NVD_TAGS` FOREIGN KEY (`HYPERLINK_ID`) 
-                #REFERENCES `NVD_HYPERLINKS` (`LINK`) ON DELETE CASCADE
+            PRIMARY KEY (`VULNERABILITY_ID`, `HYPERLINK_ID`)
             )"""
 
     @classmethod
@@ -125,45 +118,6 @@ class Queries:
             `CWE_NAME`                           TEXT            NULL,
             `SOURCE`                             TEXT            NULL,
             PRIMARY KEY (`ID`)
-            #CONSTRAINT `VULNERABILITIES_NVD_WEAKNESS_ENUMERATION` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
-            )"""
-
-    @classmethod
-    def create_table_nvd_affected_configurations(cls):
-        return """CREATE TABLE {}.`NVD_AFFECTED_CONFIGURATIONS` (
-            `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
-            `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
-            `CONFIGURATION_ID`                   NVARCHAR(512)   NOT NULL,
-            #UNIQUE(`CONFIGURATION_ID`),
-            PRIMARY KEY (`ID`)
-            #CONSTRAINT `VULNERABILITIES_NVD_AFFECTED_CONFIGURATIONS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
-            )"""
-
-    @classmethod
-    def create_table_nvd_affected_configurations_description(cls):
-        return """CREATE TABLE {}.`NVD_AFFECTED_CONFIGURATIONS_DESCRIPTION` (
-            `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
-            `AFFECTED_CONFIGURATION_ID`          NVARCHAR(512)   NOT NULL,
-            `CPE`                                NVARCHAR(512)   NOT NULL,
-            `VERSION_FROM`                       TEXT            NULL,
-            `VERSION_UPTO`                       TEXT            NULL,
-            #UNIQUE(`CPE`),
-            PRIMARY KEY (`ID`)
-            #CONSTRAINT `NVD_AFFECTED_CONFIGURATIONS_NVD` FOREIGN KEY (`AFFECTED_CONFIGURATION_ID`) 
-               #REFERENCES `NVD_AFFECTED_CONFIGURATIONS` (`CONFIGURATION_ID`) ON DELETE CASCADE
-            )"""
-
-    @classmethod
-    def create_table_nvd_matching_cpes(cls):
-        return """CREATE TABLE {}.`NVD_MATCHING_CPES` (
-            `ID`                                     INT             NOT NULL    AUTO_INCREMENT,
-            `AFFECTED_CONFIGURATION_DESCRIPTION_ID`  NVARCHAR(512)   NOT NULL,
-            `CPE`                                    TEXT            NULL,
-            PRIMARY KEY (`ID`)
-            #CONSTRAINT `NVD_AFFECTED_CONFIGURATIONS_DESCRIPTION_NVD_MATCHING_CPES` FOREIGN KEY (`AFFECTED_CONFIGURATION_DESCRIPTION_ID`) 
-               #REFERENCES `NVD_AFFECTED_CONFIGURATIONS_DESCRIPTION` (`CPE`) ON DELETE CASCADE
             )"""
 
     @classmethod
@@ -177,9 +131,7 @@ class Queries:
             `UPDATE`                             TEXT            NULL,
             `EDITION`                            TEXT            NULL,
             `LANGUAGE`                           TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_CVEDETAILS_AFFECTED_PRODUCTS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -190,9 +142,7 @@ class Queries:
             `VENDOR`                             TEXT            NULL,
             `PRODUCT`                            TEXT            NULL,
             `VULNERABLE_VERSIONS`                TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_CVEDETAILS_AFFECTED_VERSIONS_BY_PRODUCT` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -201,9 +151,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `LINK`                               TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_CVEDETAILS_HYPERLINKS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -212,9 +160,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `LINK`                               TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_SYNK_HYPERLINKS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -223,9 +169,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `VERSION`                            TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_JIRA_AFFECTED_VERSIONS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -234,9 +178,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `VERSION`                            TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_JIRA_FIX_VERSIONS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -245,9 +187,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `COMPONENT`                          TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_JIRA_COMPONENTS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -256,9 +196,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `LABEL`                              TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_JIRA_LABELS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -267,9 +205,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `ATTACHMENT_LINK`                    TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_JIRA_ATTACHMENTS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
@@ -278,9 +214,7 @@ class Queries:
             `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `ISSUE_LINK`                         TEXT            NULL,
-            PRIMARY KEY (`ID`)#,
-            #CONSTRAINT `VULNERABILITIES_JIRA_ISSUE_LINKS` FOREIGN KEY (`VULNERABILITY_ID`) 
-               #REFERENCES `VULNERABILITIES` (`CVE`) ON DELETE CASCADE
+            PRIMARY KEY (`ID`)
             )"""
 
     @classmethod
