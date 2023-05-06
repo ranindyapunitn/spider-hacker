@@ -1,35 +1,34 @@
 from hacker.db_update.db_updater import DbUpdater
-#from hacker.db_create.db_creator import DbCreator
+from hacker.db_create.db_creator import DbCreator
 from wakepy import set_keepawake, unset_keepawake
 import time
-from alive_progress import alive_bar
-
+import sys
 
 def test():
     set_keepawake(keep_screen_awake=False)
     start_time = time.time()
-
+    
     #creator = DbCreator('localhost', 'root', 'root', 'test')
     #creator.create_db()
 
-    #updater = DbUpdater('localhost', 'root', 'root', 'test')
+    updater = DbUpdater('localhost', 'root', 'root', 'test')
     #updater.populate_cve_cache(True)
-    #updater.update_db()
+    updater.update_db()
 
-        #with open("C:\\Users\\micha\\Documents\\output.txt", "a", encoding="utf-8") as f:
-            #for vuln in cve_list:
-                #print(vuln.cve, file=f)
-                #print(vuln.fixed_commit_hash, file=f)
-                #print(vuln.last_updated, file=f)
-                #self.__print_vulnerability_nvd(vuln.nvd_data, f)
-                #self.__print_vulnerability_cvedetails(vuln.cvedetails_data, f)
-                #self.__print_vulnerability_snyk(vuln.snyk_data, f)
-                #self.__print_vulnerability_jira(vuln.jira_data, f)
-        #print(self.__get_cve_to_insert_jira())
-        #self.__get_cve_to_insert()
+    #with open("C:\\Users\\micha\\Documents\\output.txt", "a", encoding="utf-8") as f:
+        #for vuln in cve_list:
+            #print(vuln.cve, file=f)
+            #print(vuln.fixed_commit_hash, file=f)
+            #print(vuln.last_updated, file=f)
+            #self.__print_vulnerability_nvd(vuln.nvd_data, f)
+            #self.__print_vulnerability_cvedetails(vuln.cvedetails_data, f)
+            #self.__print_vulnerability_snyk(vuln.snyk_data, f)
+            #self.__print_vulnerability_jira(vuln.jira_data, f)
+    #print(self.__get_cve_to_insert_jira())
+    #self.__get_cve_to_insert()
 
     print("--- %s minutes ---" % ((time.time() - start_time) / 60))
-    unset_keepawake()
+    unset_keepawake()        
 
 def __print_vulnerability_nvd(self, vulnerability, f):
     print("NVD:", file=f)

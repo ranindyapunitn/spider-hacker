@@ -19,6 +19,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementClickInterceptedException
+from alive_progress import alive_bar
 
 
 class DbUpdater:
@@ -29,7 +30,7 @@ class DbUpdater:
         self.password = password
         self.schema_name = schema_name
 
-    def __batch_populate_cve_list(self, cves):
+    def __batch_populate_cve_list(self, cves, inner_bar):
         populator = CvePopulator()
 
         cve_list = []
@@ -44,6 +45,7 @@ class DbUpdater:
                     vuln.nvd_data = populator.populate_nvd_data(soup)
                 except:
                     pass 
+                inner_bar()
             if cve["cvedetails"] != "":
                 #print("CVEDETAILS POPULATE")
                 try:
@@ -52,6 +54,7 @@ class DbUpdater:
                     vuln.cvedetails_data = populator.populate_cvedetails_data(soup)
                 except:
                     pass
+                inner_bar()
             if cve["snyk"] != "":
                 #print("SNYK POPULATE")
                 driver_exe = 'chromedriver'
@@ -76,6 +79,8 @@ class DbUpdater:
                     pass
 
                 vuln.snyk_data = populator.populate_snyk_data(soup)
+
+                inner_bar()
             if cve["jira"] != "":
                 #print("JIRA POPULATE")
                 try:
@@ -84,6 +89,8 @@ class DbUpdater:
                     vuln.jira_data = populator.populate_jira_data(soup)
                 except:
                     pass
+
+                inner_bar()
 
             cve_list.append(vuln)
 
@@ -220,20 +227,25 @@ class DbUpdater:
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)
 
         index = 1
-        while(len(cve_list) > 0):
-            print("CVEs to update: ", len(cve_list))
-            batches_remaining = math.ceil(len(cve_list) / BATCH_SIZE)
+        print("CVEs to download:", len(cve_list))
+        batches = math.ceil(len(cve_list) / 100)
+        while(len(cve_list) > 0):         
+            print("Downloading batch " + str(index) + " of " + str(batches) + "... " + "(" + str(math.floor(index * 100 / batches)) + "%" + " completed)")
             cve_batch = cve_list[0:BATCH_SIZE] if len(cve_list) >= BATCH_SIZE else cve_list
             cve_list = cve_list[BATCH_SIZE:] if len (cve_list) >= BATCH_SIZE else []
         
-            self.__batch_update_tables(self.__batch_populate_cve_list(cve_batch))
+            with alive_bar(BATCH_SIZE) as bar:
+                self.__batch_update_tables(self.__batch_populate_cve_list(cve_batch, bar))
 
-            print("Batch " + str(index) + "/" + str(batches_remaining) + " updated!")
+            index = index + 1
+
+            sys.stdout.write("\033[F")
+            sys.stdout.write("\033[F")
 
     def populate_cve_cache(self, clear_cache):
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)
 
-        print("populating cve cache...")
+        print("Populating cve cache...")
 
         if clear_cache:
             manager.delete_cache()
@@ -261,8 +273,6 @@ class DbUpdater:
         cves_already_present = [cve["cve"] for cve in manager.get_cve_list()]
         unique_cve_to_insert = [cve for cve in cves_to_insert if cve[0] not in cves_already_present]
         manager.insert_cve_to_download(unique_cve_to_insert)
-
-        print("cache populated!")
 
     def update_db(self):
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)

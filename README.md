@@ -38,6 +38,7 @@ If you successfullt completed the installation, you can run the tool from the te
  4. ```db_password```: the password to access the database.
  5. ```db_name```: the name of the schema.
  6. ```clear_cache``` (optional): if ```populate_cache``` mode is chosen, this parameter can be set to clear the cache table of all pre-existing entries.
+ 7. ```set_awake``` (optional): if set, the host will never go on standby. Since the tool runs for very long, this is recommended in order to not stop the execution. 
 
 ## License
 
