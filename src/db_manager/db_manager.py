@@ -2,7 +2,7 @@ import mysql.connector
 import sys
 from mysql.connector.errors import DatabaseError
 from mysql.connector import errorcode
-from db_manager.queries import Queries
+from src.db_manager.queries import Queries
 
 
 """

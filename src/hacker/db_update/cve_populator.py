@@ -1,13 +1,13 @@
-from table_objects.nvd.nvd_data import NvdData
-from table_objects.nvd.nvd_hyperlink import NvdHyperlink
-from table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
-from table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
-from table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
-from table_objects.cvedetails.cvedetails_data import CvedetailsData
-from table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
-from table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
-from table_objects.snyk.snyk_data import SnykData
-from table_objects.jira.jira_data import JiraData
+from src.table_objects.nvd.nvd_data import NvdData
+from src.table_objects.nvd.nvd_hyperlink import NvdHyperlink
+from src.table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
+from src.table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
+from src.table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
+from src.table_objects.cvedetails.cvedetails_data import CvedetailsData
+from src.table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
+from src.table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
+from src.table_objects.snyk.snyk_data import SnykData
+from src.table_objects.jira.jira_data import JiraData
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
@@ -373,9 +373,9 @@ class CvePopulator:
             index = index + 1       
         
         if soup.find("strong", {"title" : "Introduced in Version"}):
-            jira_data.version_introduced = soup.find("strong", {"title" : "Introduced in Version"}).findNext().contents[0].strip()
+            jira_data.version_introduced = soup.find("strong", {"title" : "Introduced in Version"}).findNext().findNext().contents[0].strip()
         if soup.find("strong", {"title" : "Symptom Severity"}):
-            jira_data.symptom_severity = soup.find("strong", {"title" : "Symptom Severity"}).findNext().contents[0].strip()        
+            jira_data.symptom_severity = soup.find("strong", {"title" : "Symptom Severity"}).findNext().findNext().contents[0].strip()        
         
         jira_data.attachments = []
 
@@ -387,14 +387,19 @@ class CvePopulator:
                     jira_data.issue_links.append(link["href"])
 
         if soup.find("span", id="assignee-val"):
-            jira_data.assignee = soup.find("span", id="assignee-val").contents[2].strip()
+            if len(soup.find("span", id="assignee-val").contents) > 2:
+                jira_data.assignee = soup.find("span", id="assignee-val").contents[2].strip()
         if soup.find("span", id="reporter-val"):
             reporter_val = soup.find("span", id="reporter-val")
-            jira_data.reporter = reporter_val.select("span:first-child")[0].contents[2].strip()
+            if len(reporter_val):
+                if len(reporter_val.select("span:first-child")[0].contents) > 2:
+                    jira_data.reporter = reporter_val.select("span:first-child")[0].contents[2].strip()
         if soup.find("aui-badge", id="vote-data"):
-            jira_data.affected_customers = soup.find("aui-badge", id="vote-data").contents[0].strip()
+            if len(soup.find("aui-badge", id="vote-data").contents):
+                jira_data.affected_customers = soup.find("aui-badge", id="vote-data").contents[0].strip()
         if soup.find("aui-badge", id="watcher-data"):
-            jira_data.watchers = soup.find("aui-badge", id="watcher-data").contents[0].strip()
+            if len(soup.find("aui-badge", id="watcher-data").contents):
+                jira_data.watchers = soup.find("aui-badge", id="watcher-data").contents[0].strip()
 
         date_created = soup.find("span", {"data-name" : "Created"})
         if date_created:

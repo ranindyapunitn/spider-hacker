@@ -1,9 +1,9 @@
 #import agrparse
-from db_manager.db_manager import DbManager
-from hacker.db_update.db_updater import DbUpdater
-from hacker.db_create.db_creator import DbCreator
-from hacker.db_delete.db_deleter import DbDeleter
-from hacker.db_dump.db_dumper import DbDumper
+from src.db_manager.db_manager import DbManager
+from src.hacker.db_update.db_updater import DbUpdater
+from src.hacker.db_create.db_creator import DbCreator
+from src.hacker.db_delete.db_deleter import DbDeleter
+from src.hacker.db_dump.db_dumper import DbDumper
 from wakepy import set_keepawake, unset_keepawake
 import argparse
 import time
@@ -28,10 +28,10 @@ def main():
         set_keepawake(keep_screen_awake=False)
 
     if args.mode == "create_db":
-        resp = input("Creating a new database will erase all previously stored data. Are you sure to proceed? [y/n]")
+        resp = input("Creating a new database will erase all previously stored data. Are you sure to proceed? [y/n] ")
         while (resp != "y" and resp != "n"):
             print(resp)
-            resp = input("Please prompt a valid answer. Are you sure to proceed? [y/n]")
+            resp = input("Please prompt a valid answer. Are you sure to proceed? [y/n] ")
 
         if resp == "y":
             print("Creating database...")
@@ -41,10 +41,10 @@ def main():
         else:
             sys.exit()
     elif args.mode == "delete_db":
-        resp = input("Are you sure you want to delete the exsisting database? [y/n]")
+        resp = input("Are you sure you want to delete the exsisting database? [y/n] ")
         while (resp != "y" and resp != "n"):
             print(resp)
-            resp = input("Please prompt a valid answer. Are you sure you want to delete the exsisting database? [y/n]")
+            resp = input("Please prompt a valid answer. Are you sure you want to delete the exsisting database? [y/n] ")
 
         if resp == "y":
             print("Deleting database...")
@@ -64,17 +64,16 @@ def main():
         else:
             updater.populate_cve_cache(False)
 
-        resp = input("Cache populated. Do you wish to update the database? [y/n]")
+        resp = input("Cache populated. Do you wish to update the database? [y/n] ")
         while (resp != "y" and resp != "n"):
             print(resp)
-            resp = input("Please prompt a valid answer. Do you wish to update the database? [y/n]")
+            resp = input("Please prompt a valid answer. Do you wish to update the database? [y/n] ")
 
         if resp == "y":
             updater.update_db()
         else:
             sys.exit()
     elif args.mode == "update_db":
-        print("Populating database...")
         updater = DbUpdater(args.db_host, args.db_user, args.db_password, args.db_name)
         updater.update_db()
         print("Done populating database")
@@ -82,4 +81,4 @@ def main():
     if args.set_awake is not None:
         unset_keepawake()
 
-main()
+#main()

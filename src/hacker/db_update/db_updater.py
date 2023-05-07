@@ -2,10 +2,10 @@ from gevent import monkey as curious_george
 curious_george.patch_all(thread=False, select=False)
 import grequests
 from definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
-from db_manager.db_manager import DbManager
-from hacker.db_update.cve_populator import CvePopulator
-from hacker.db_update.link_collector import LinkCollector
-from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from src.db_manager.db_manager import DbManager
+from src.hacker.db_update.cve_populator import CvePopulator
+from src.hacker.db_update.link_collector import LinkCollector
+from src.table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
 import re
 import sys
 import time
@@ -14,6 +14,7 @@ import requests
 import math
 from os import path
 from datetime import datetime
+from operator import itemgetter
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -78,43 +79,43 @@ class DbUpdater:
             if cve["jira"] != "":
                 jira_links.append(cve["jira"])
 
-        try:
-            nvd_results = grequests.map((grequests.get(u) for u in nvd_links), size=10)
-            for page in nvd_results:
-                soup = BeautifulSoup(page.text, "lxml")
-                cve = soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}).string.strip()
-                nvd_data.append({"cve" : cve, "data" : populator.populate_nvd_data(soup)})
-        except:
-            pass
+        #try:
+        nvd_results = grequests.map((grequests.get(u) for u in nvd_links), size=10)
+        for page in nvd_results:
+            soup = BeautifulSoup(page.text, "lxml")
+            cve = soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}).string.strip()
+            nvd_data.append({"cve" : cve, "data" : populator.populate_nvd_data(soup)})
+        #except:
+            #pass
 
-        try:
-            cvedetails_results = grequests.map((grequests.get(u) for u in cvedetails_links), size=10)
-            for page in cvedetails_results:
-                soup = BeautifulSoup(page.text, "lxml")
-                h1 = soup.find("h1")
-                cve = h1.find("a").contents[0].strip()
-                cvedetails_data.append({"cve" : cve, "data" : populator.populate_cvedetails_data(soup)})           
-        except:
-            pass
+        #try:
+        cvedetails_results = grequests.map((grequests.get(u) for u in cvedetails_links), size=10)
+        for page in cvedetails_results:
+            soup = BeautifulSoup(page.text, "lxml")
+            h1 = soup.find("h1")
+            cve = h1.find("a").contents[0].strip()
+            cvedetails_data.append({"cve" : cve, "data" : populator.populate_cvedetails_data(soup)})           
+        #except:
+            #pass
 
-        try:
-            jira_results = grequests.map((grequests.get(u) for u in jira_links), size=10)
-            for page in jira_results:
-                soup = BeautifulSoup(page.text, "lxml")
-                cve = ""
-                issue_details = soup.find("ul", id="issuedetails")
-                issue_elements = []
-                if issue_details:
-                    issue_elements = issue_details.findAll("li")
-                if len(issue_elements) > 7:
-                    label_containers = issue_elements[7].findAll("li")
-                    for container in label_containers:
-                        if "CVE" in container.find("span").contents[0].strip():
-                            cve = container.find("span").contents[0].strip()
+        #try:
+        jira_results = grequests.map((grequests.get(u) for u in jira_links), size=10)
+        for page in jira_results:
+            soup = BeautifulSoup(page.text, "lxml")
+            cve = ""
+            issue_details = soup.find("ul", id="issuedetails")
+            issue_elements = []
+            if issue_details:
+                issue_elements = issue_details.findAll("li")
+            if len(issue_elements) > 7:
+                label_containers = issue_elements[7].findAll("li")
+                for container in label_containers:
+                    if "CVE" in container.find("span").contents[0].strip():
+                        cve = container.find("span").contents[0].strip()
 
             jira_data.append({"cve" : cve, "data" : populator.populate_jira_data(soup)})
-        except:
-            pass
+        #except:
+            #pass
 
         for cve in cve_list:
             vuln = VulnerabilityInfo()
@@ -308,5 +309,9 @@ class DbUpdater:
         manager = DbManager(self.hostname, self.user, self.password, self.schema_name)
         collector = LinkCollector()
 
-        cves_to_download = manager.get_cve_to_download()
-        self.__insert_cve_objects(cves_to_download)
+        #cves_to_download = manager.get_cve_to_download()
+        cves_to_download = sorted(manager.get_cve_to_download(), key=itemgetter('cve'), reverse=True)
+        if cves_to_download:
+            self.__insert_cve_objects(cves_to_download)
+        else:
+            print("Cache is empty, run populate_cache before trying to update the database")

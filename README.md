@@ -16,6 +16,7 @@ spider-hacker is a tool written in python with the goal of building a database o
 2. [selenium](https://pypi.org/project/selenium/)
 3. [grequests](https://github.com/spyoungtech/grequests)
 4. [mysql-connector](https://pypi.org/project/mysql-connector-python/)
+5. [alive-progress](https://pypi.org/project/alive-progress/)
 
 #### Installation
 

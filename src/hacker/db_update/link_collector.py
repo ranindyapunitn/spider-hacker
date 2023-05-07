@@ -90,8 +90,9 @@ class LinkCollector:
         print("Gathering CVEs from Jira...")
         cve_list_jira = []
         links = []
-        year_bottom = 2002
-        year_top = 2003
+        # No CVEs exists before this date
+        year_bottom = 2014
+        year_top = 2015
 
         while year_bottom <= datetime.now().year:
             start_index = 0
@@ -133,10 +134,11 @@ class LinkCollector:
                 #break
 
         print("CVEs from jira completed")
-        return cve_list_jira
+        return cve_list_jiral1a
 
     def get_cve_to_insert(self):
-        cve_list =  self.__get_cve_to_insert_nvd() + self.__get_cve_to_insert_cvedetails() + self.__get_cve_to_insert_snyk() + self.__get_cve_to_insert_jira()
+        cve_list =  self.__get_cve_to_insert_nvd() + self.__get_cve_to_insert_jira()
+        #cve_list =  self.__get_cve_to_insert_nvd() + self.__get_cve_to_insert_cvedetails() + self.__get_cve_to_insert_snyk() + self.__get_cve_to_insert_jira()
 
         merge_by_keys = ['cve']
         out = defaultdict(list)
