@@ -1,19 +1,20 @@
 from hacker.db_update.db_updater import DbUpdater
 from hacker.db_create.db_creator import DbCreator
+from plotter.plotter import Plotter
 from wakepy import set_keepawake, unset_keepawake
 import time
 import sys
 
 def test():
     set_keepawake(keep_screen_awake=False)
-    start_time = time.time()
+    #start_time = time.time()
     
     #creator = DbCreator('localhost', 'root', 'root', 'test')
     #creator.create_db()
 
-    updater = DbUpdater('localhost', 'root', 'root', 'test')
+    #updater = DbUpdater('localhost', 'root', 'root', 'test')
     #updater.populate_cve_cache(True)
-    updater.update_db()
+    #updater.update_db()
 
     #with open("C:\\Users\\micha\\Documents\\output.txt", "a", encoding="utf-8") as f:
         #for vuln in cve_list:
@@ -27,7 +28,10 @@ def test():
     #print(self.__get_cve_to_insert_jira())
     #self.__get_cve_to_insert()
 
-    print("--- %s minutes ---" % ((time.time() - start_time) / 60))
+    #print("--- %s minutes ---" % ((time.time() - start_time) / 60))
+
+    plotter = Plotter("localhost", "root", "root", "test")
+    plotter.plot()
     unset_keepawake()        
 
 def __print_vulnerability_nvd(self, vulnerability, f):

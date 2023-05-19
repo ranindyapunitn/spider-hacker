@@ -2,7 +2,18 @@ import mysql.connector
 import sys
 from mysql.connector.errors import DatabaseError
 from mysql.connector import errorcode
-from src.db_manager.queries import Queries
+from db_manager.queries import Queries
+from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from table_objects.nvd.nvd_data import NvdData
+from table_objects.nvd.nvd_hyperlink import NvdHyperlink
+from table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
+from table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
+from table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
+from table_objects.cvedetails.cvedetails_data import CvedetailsData
+from table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
+from table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
+from table_objects.snyk.snyk_data import SnykData
+from table_objects.jira.jira_data import JiraData
 
 
 """
@@ -78,6 +89,92 @@ class DbManager:
             print(err.msg)
 
         return cves
+
+    def get_vulnerabilities(self):
+        vulnerabilities = []
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(Queries.get_vulnerabilities().format(self.schema_name))
+            result_set = cursor.fetchall()
+            
+            for row in result_set:
+                vuln = VulnerabilityInfo()
+                vuln.cve = row[0]
+                vuln.fixed_commit_hash = row[1]
+                vuln.last_updated = row[2]
+                vuln.nvd_data.nvd_description = row[3]
+                vuln.nvd_data.nvd_published_date = row[4]
+                vuln.nvd_data.nvd_last_modified_date = row[5]
+                vuln.nvd_data.nvd_source = row[6]
+                vuln.nvd_data.nvd_cvss3_nist_name = row[7]
+                vuln.nvd_data.nvd_cvss3_nist_score = row[8]
+                vuln.nvd_data.nvd_cvss3_nist_severity = row[9]
+                vuln.nvd_data.nvd_cvss3_nist_vector = row[10]
+                vuln.nvd_data.nvd_cvss3_cna_name = row[11]
+                vuln.nvd_data.nvd_cvss3_cna_score = row[12]
+                vuln.nvd_data.nvd_cvss3_cna_severity = row[13]
+                vuln.nvd_data.nvd_cvss3_cna_vector = row[14]
+                vuln.nvd_data.nvd_cvss2_nist_name = row[15]
+                vuln.nvd_data.nvd_cvss2_nist_score = row[16]
+                vuln.nvd_data.nvd_cvss2_nist_severity = row[17]
+                vuln.nvd_data.nvd_cvss2_nist_vector = row[18]
+                vuln.nvd_data.nvd_cvss2_cna_name = row[19]
+                vuln.nvd_data.nvd_cvss2_cna_score = row[20]
+                vuln.nvd_data.nvd_cvss2_cna_severity = row[21]
+                vuln.nvd_data.nvd_cvss2_cna_vector = row[22]
+                vuln.cvedetails_data.cvedetails_published_date = row[23]
+                vuln.cvedetails_data.cvedetails_last_modified_date = row[24]
+                vuln.cvedetails_data.cvedetails_score = row[25]
+                vuln.cvedetails_data.cvedetails_confidentiality_impact = row[26]
+                vuln.cvedetails_data.cvedetails_integrity_impact = row[27]
+                vuln.cvedetails_data.cvedetails_availability_impact = row[28]
+                vuln.cvedetails_data.cvedetails_access_complexity = row[29]
+                vuln.cvedetails_data.cvedetails_authentication = row[30]
+                vuln.cvedetails_data.cvedetails_gained_access = row[31]
+                vuln.cvedetails_data.cvedetails_cwe_id = row[32]
+                vuln.snyk_data.snyk_name = row[33]
+                vuln.snyk_data.snyk_published_date = row[34]
+                vuln.snyk_data.snyk_how_to_fix = row[35]
+                vuln.snyk_data.snyk_exploit_maturity = row[36]
+                vuln.snyk_data.snyk_score = row[37]
+                vuln.snyk_data.snyk_attack_complexity = row[38]
+                vuln.snyk_data.snyk_attack_vector = row[39]
+                vuln.snyk_data.snyk_privileges_required = row[40]
+                vuln.snyk_data.snyk_user_interaction = row[41]
+                vuln.snyk_data.snyk_scope = row[42]
+                vuln.snyk_data.snyk_confidentiality_impact = row[43]
+                vuln.snyk_data.snyk_integrity_impact = row[44]
+                vuln.snyk_data.snyk_availability_impact = row[45]
+                vuln.snyk_data.snyk_nvd_score = row[46]
+                vuln.snyk_data.snyk_nvd_attack_complexity = row[47]
+                vuln.snyk_data.snyk_nvd_attack_vector = row[48]
+                vuln.snyk_data.snyk_nvd_privileges_required = row[49]
+                vuln.snyk_data.snyk_nvd_user_interaction = row[50]
+                vuln.snyk_data.snyk_nvd_exploit_maturity = row[51]
+                vuln.snyk_data.snyk_nvd_scope = row[52]
+                vuln.snyk_data.snyk_nvd_confidentiality_impact = row[53]
+                vuln.snyk_data.snyk_nvd_integrity_impact = row[54]
+                vuln.snyk_data.snyk_nvd_availability_impact = row[55]
+                vuln.jira_data.type = row[56]
+                vuln.jira_data.priority = row[57]
+                vuln.jira_data.version_introduced = row[58]
+                vuln.jira_data.symptom_severity = row[59]
+                vuln.jira_data.status = row[60]
+                vuln.jira_data.resolution = row[61]
+                vuln.jira_data.assignee = row[62]
+                vuln.jira_data.reporter = row[63]
+                vuln.jira_data.affected_customers = row[64]
+                vuln.jira_data.watchers = row[65]
+                vuln.jira_data.date_created = row[66]
+                vuln.jira_data.date_updated = row[67]
+                vuln.jira_data.date_resolved = row[68]
+
+                vulnerabilities.append(vuln)
+        except mysql.connector.Error as err:
+            print(err.msg)
+
+        return vulnerabilities
 
     def insert_cve_to_download(self, cve_list):
         cursor = self.connection.cursor()

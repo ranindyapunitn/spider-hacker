@@ -1,6 +1,9 @@
 class CvedetailsData:
 
     def __init__(self):
+        self.cvedetails_published_date = None
+        self.cvedetails_last_modified_date = None
+        self.cvedetails_score = ""
         self.cvedetails_score = ""
         self.cvedetails_confidentiality_impact = ""
         self.cvedetails_integrity_impact = ""

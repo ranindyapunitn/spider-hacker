@@ -45,6 +45,8 @@ class Queries:
             `NVD_CVSS2_CNA_SCORE`                TEXT            NULL,
             `NVD_CVSS2_CNA_SEVERITY`             TEXT            NULL,
             `NVD_CVSS2_CNA_VECTOR`               TEXT            NULL,
+            `CVEDETAILS_PUBLISHED_DATE`          DATETIME        NULL,
+            `CVEDETAILS_LAST_MODIFIED_DATE`      DATETIME        NULL,
             `CVEDETAILS_SCORE`                   TEXT            NULL,
             `CVEDETAILS_CONFIDENTIALITY_IMPACT`  TEXT            NULL,
             `CVEDETAILS_INTEGRITY_IMPACT`        TEXT            NULL,
@@ -53,29 +55,29 @@ class Queries:
             `CVEDETAILS_AUTHENTICATION`          TEXT            NULL,
             `CVEDETAILS_GAINED_ACCESS`           TEXT            NULL,
             `CVEDETAILS_CWE_ID`                  TEXT            NULL,
-            `SYNK_NAME`                          TEXT            NULL,
-            `SYNK_PUBLISHED_DATE`                DATETIME        NULL,
-            `SYNK_HOW_TO_FIX`                    TEXT            NULL,
-            `SYNK_EXPLOIT_MATURITY`              TEXT            NULL,
-            `SYNK_SCORE`                         TEXT            NULL,
-            `SYNK_ATTACK_COMPLEXITY`             TEXT            NULL,
-            `SYNK_ATTACK_VECTOR`                 TEXT            NULL,
-            `SYNK_PRIVILEGES_REQUIRED`           TEXT            NULL,
-            `SYNK_USER_INTERACTION`              TEXT            NULL,
-            `SYNK_SCOPE`                         TEXT            NULL,
-            `SYNK_CONFIDENTIALITY_IMPACT`        TEXT            NULL,
-            `SYNK_INTEGRITY_IMPACT`              TEXT            NULL,
-            `SYNK_AVAILABILITY_IMPACT`           TEXT            NULL,
-            `SYNK_NVD_SCORE`                     TEXT            NULL,
-            `SYNK_NVD_ATTACK_COMPLEXITY`         TEXT            NULL,
-            `SYNK_NVD_ATTACK_VECTOR`             TEXT            NULL,
-            `SYNK_NVD_PRIVILEGES_REQUIRED`       TEXT            NULL,
-            `SYNK_NVD_USER_INTERACTION`          TEXT            NULL,
-            `SYNK_NVD_EXPLOIT_MATURITY`          TEXT            NULL,
-            `SYNK_NVD_SCOPE`                     TEXT            NULL,
-            `SYNK_NVD_CONFIDENTIALITY_IMPACT`    TEXT            NULL,
-            `SYNK_NVD_INTEGRITY_IMPACT`          TEXT            NULL,
-            `SYNK_NVD_AVAILABILITY_IMPACT`       TEXT            NULL,
+            `SNYK_NAME`                          TEXT            NULL,
+            `SNYK_PUBLISHED_DATE`                DATETIME        NULL,
+            `SNYK_HOW_TO_FIX`                    TEXT            NULL,
+            `SNYK_EXPLOIT_MATURITY`              TEXT            NULL,
+            `SNYK_SCORE`                         TEXT            NULL,
+            `SNYK_ATTACK_COMPLEXITY`             TEXT            NULL,
+            `SNYK_ATTACK_VECTOR`                 TEXT            NULL,
+            `SNYK_PRIVILEGES_REQUIRED`           TEXT            NULL,
+            `SNYK_USER_INTERACTION`              TEXT            NULL,
+            `SNYK_SCOPE`                         TEXT            NULL,
+            `SNYK_CONFIDENTIALITY_IMPACT`        TEXT            NULL,
+            `SNYK_INTEGRITY_IMPACT`              TEXT            NULL,
+            `SNYK_AVAILABILITY_IMPACT`           TEXT            NULL,
+            `SNYK_NVD_SCORE`                     TEXT            NULL,
+            `SNYK_NVD_ATTACK_COMPLEXITY`         TEXT            NULL,
+            `SNYK_NVD_ATTACK_VECTOR`             TEXT            NULL,
+            `SNYK_NVD_PRIVILEGES_REQUIRED`       TEXT            NULL,
+            `SNYK_NVD_USER_INTERACTION`          TEXT            NULL,
+            `SNYK_NVD_EXPLOIT_MATURITY`          TEXT            NULL,
+            `SNYK_NVD_SCOPE`                     TEXT            NULL,
+            `SNYK_NVD_CONFIDENTIALITY_IMPACT`    TEXT            NULL,
+            `SNYK_NVD_INTEGRITY_IMPACT`          TEXT            NULL,
+            `SNYK_NVD_AVAILABILITY_IMPACT`       TEXT            NULL,
             `JIRA_TYPE`                          TEXT            NULL,
             `JIRA_PRIORITY`                      TEXT            NULL,
             `JIRA_VERSION_INTRODUCED`            TEXT            NULL,
@@ -128,6 +130,7 @@ class Queries:
             `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
             `PRODUCT_TYPE`                       TEXT            NULL,
             `VENDOR`                             TEXT            NULL,
+            `PRODUCT`                            TEXT            NULL,
             `VERSION`                            TEXT            NULL,
             `UPDATE`                             TEXT            NULL,
             `EDITION`                            TEXT            NULL,
@@ -226,7 +229,6 @@ class Queries:
     def create_schema(cls):
         return "CREATE DATABASE {} DEFAULT CHARACTER SET 'utf8'"
 
-
     #
     # GET INFO FROM DB
     #
@@ -245,6 +247,177 @@ class Queries:
         return """SELECT `CVE`, 
             `LAST_UPDATED`
             FROM {}.`VULNERABILITIES`"""
+
+    @classmethod
+    def get_vulnerabilities(cls):
+        return """SELECT `CVE`,
+            `FIXED_COMMIT_HASH`,
+            `LAST_UPDATED`,
+            `NVD_DESCRIPTION`,
+            `NVD_PUBLISHED_DATE`,
+            `NVD_LAST_MODIFIED_DATE`,
+            `NVD_SOURCE`,
+            `NVD_CVSS3_NIST_NAME`,
+            `NVD_CVSS3_NIST_SCORE`,
+            `NVD_CVSS3_NIST_SEVERITY`,
+            `NVD_CVSS3_NIST_VECTOR`,
+            `NVD_CVSS3_CNA_NAME`, 
+            `NVD_CVSS3_CNA_SCORE`,
+            `NVD_CVSS3_CNA_SEVERITY`,
+            `NVD_CVSS3_CNA_VECTOR`,
+            `NVD_CVSS2_NIST_NAME`,
+            `NVD_CVSS2_NIST_SCORE`,
+            `NVD_CVSS2_NIST_SEVERITY`,
+            `NVD_CVSS2_NIST_VECTOR`,
+            `NVD_CVSS2_CNA_NAME`, 
+            `NVD_CVSS2_CNA_SCORE`,
+            `NVD_CVSS2_CNA_SEVERITY`,
+            `NVD_CVSS2_CNA_VECTOR`,
+            `CVEDETAILS_PUBLISHED_DATE`,
+            `CVEDETAILS_LAST_MODIFIED_DATE`,
+            `CVEDETAILS_SCORE`,
+            `CVEDETAILS_CONFIDENTIALITY_IMPACT`,
+            `CVEDETAILS_INTEGRITY_IMPACT`,
+            `CVEDETAILS_AVAILABILITY_IMPACT`,
+            `CVEDETAILS_ACCESS_COMPLEXITY`,
+            `CVEDETAILS_AUTHENTICATION`,
+            `CVEDETAILS_GAINED_ACCESS`,
+            `CVEDETAILS_CWE_ID`,
+            `SNYK_NAME`,
+            `SNYK_PUBLISHED_DATE`,
+            `SNYK_HOW_TO_FIX`,
+            `SNYK_EXPLOIT_MATURITY`,
+            `SNYK_SCORE`,
+            `SNYK_ATTACK_COMPLEXITY`,
+            `SNYK_ATTACK_VECTOR`,
+            `SNYK_PRIVILEGES_REQUIRED`,
+            `SNYK_USER_INTERACTION`,
+            `SNYK_SCOPE`,
+            `SNYK_CONFIDENTIALITY_IMPACT`,
+            `SNYK_INTEGRITY_IMPACT`,
+            `SNYK_AVAILABILITY_IMPACT`,
+            `SNYK_NVD_SCORE`,
+            `SNYK_NVD_ATTACK_COMPLEXITY`,
+            `SNYK_NVD_ATTACK_VECTOR`,
+            `SNYK_NVD_PRIVILEGES_REQUIRED`,
+            `SNYK_NVD_USER_INTERACTION`,
+            `SNYK_NVD_EXPLOIT_MATURITY`,
+            `SNYK_NVD_SCOPE`,
+            `SNYK_NVD_CONFIDENTIALITY_IMPACT`,
+            `SNYK_NVD_INTEGRITY_IMPACT`,
+            `SNYK_NVD_AVAILABILITY_IMPACT`,
+            `JIRA_TYPE`,
+            `JIRA_PRIORITY`,
+            `JIRA_VERSION_INTRODUCED`,
+            `JIRA_SYMPTOM_SEVERITY`,
+            `JIRA_STATUS`,
+            `JIRA_RESOLUTION`,
+            `JIRA_ASSIGNEE`,
+            `JIRA_REPORTER`,
+            `JIRA_AFFECTED_CUSTOMERS`,
+            `JIRA_WATCHERS`,
+            `JIRA_DATE_CREATED`,
+            `JIRA_DATE_UPDATED`,
+            `JIRA_DATE_RESOLVED`
+            FROM {}.`VULNERABILITIES`
+            WHERE `SNYK_NAME` <> ''
+            ORDER BY `SNYK_PUBLISHED_DATE` ASC"""
+
+    @classmethod
+    def get_nvd_hyperlinks(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `LINK`
+            FROM {}.`NVD_HYPERLINKS`"""
+
+    @classmethod
+    def get_nvd_tag(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `HYPERLINK_ID`,
+            `TAG_DESCRIPTION`
+            FROM {}.`NVD_TAGS`"""
+
+    @classmethod
+    def get_nvd_weakness_enumeration(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `CWE_ID`,
+            `CWE_NAME`,
+            `SOURCE`
+            FROM {}.`NVD_WEAKNESS_ENUMERATION`"""
+
+    @classmethod
+    def get_nvd_affected_configuration(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `CONFIGURATION_ID`
+            FROM {}.`NVD_AFFECTED_CONFIGURATIONS`"""
+
+    @classmethod
+    def get_cvedetails_hyperlinks(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `LINK`
+            FROM {}.`CVEDETAILS_HYPERLINKS`"""
+
+    @classmethod
+    def get_cvedetails_affected_products(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `PRODUCT_TYPE`,
+            `VENDOR`,
+            `PRODUCT`,
+            `VERSION`,
+            `UPDATE`,
+            `EDITION`,
+            `LANGUAGE`
+            FROM {}.`CVEDETAILS_AFFECTED_PRODUCTS`"""
+
+    @classmethod
+    def get_cvedetails_affected_versions_by_product(cls):
+        return """SELECT
+            `VULNERABILITY_ID`,
+            `VENDOR`,
+            `PRODUCT`,
+            `VULNERABLE_VERSIONS`
+            FROM {}.`CVEDETAILS_AFFECTED_VERSIONS_BY_PRODUCT`"""
+
+    @classmethod
+    def get_snyk_hyperlinks(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `LINK`
+            FROM {}.`SNYK_HYPERLINKS`"""
+
+    @classmethod
+    def get_jira_affected_versions(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `VERSION`
+            FROM {}.`JIRA_AFFECTED_VERSIONS`"""
+
+    @classmethod
+    def get_jira_fix_versions(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `VERSION`
+            FROM {}.`JIRA_FIX_VERSIONS`"""
+
+    @classmethod
+    def get_jira_components(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `COMPONENT`
+            FROM {}.`JIRA_COMPONENTS`"""
+
+    @classmethod
+    def get_jira_labels(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `LABEL`
+            FROM {}.`JIRA_LABELS`"""
+
+    @classmethod
+    def get_jira_attachments(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `ATTACHMENT_LINK`
+            FROM {}.`JIRA_ATTACHMENTS`"""
+
+    @classmethod
+    def get_jira_issue_links(cls):
+        return """SELECT `VULNERABILITY_ID`,
+            `ISSUE_LINK`
+            FROM {}.`JIRA_ISSUE_LINKS`"""
 
     #
     # DATABASE POPULATION
@@ -296,6 +469,8 @@ class Queries:
             `NVD_CVSS2_CNA_SCORE`,
             `NVD_CVSS2_CNA_SEVERITY`,
             `NVD_CVSS2_CNA_VECTOR`,
+            `CVEDETAILS_PUBLISHED_DATE`,
+            `CVEDETAILS_LAST_MODIFIED_DATE`,
             `CVEDETAILS_SCORE`,
             `CVEDETAILS_CONFIDENTIALITY_IMPACT`,
             `CVEDETAILS_INTEGRITY_IMPACT`,
@@ -304,29 +479,29 @@ class Queries:
             `CVEDETAILS_AUTHENTICATION`,
             `CVEDETAILS_GAINED_ACCESS`,
             `CVEDETAILS_CWE_ID`,
-            `SYNK_NAME`,
-            `SYNK_PUBLISHED_DATE`,
-            `SYNK_HOW_TO_FIX`,
-            `SYNK_EXPLOIT_MATURITY`,
-            `SYNK_SCORE`,
-            `SYNK_ATTACK_COMPLEXITY`,
-            `SYNK_ATTACK_VECTOR`,
-            `SYNK_PRIVILEGES_REQUIRED`,
-            `SYNK_USER_INTERACTION`,
-            `SYNK_SCOPE`,
-            `SYNK_CONFIDENTIALITY_IMPACT`,
-            `SYNK_INTEGRITY_IMPACT`,
-            `SYNK_AVAILABILITY_IMPACT`,
-            `SYNK_NVD_SCORE`,
-            `SYNK_NVD_ATTACK_COMPLEXITY`,
-            `SYNK_NVD_ATTACK_VECTOR`,
-            `SYNK_NVD_PRIVILEGES_REQUIRED`,
-            `SYNK_NVD_USER_INTERACTION`,
-            `SYNK_NVD_EXPLOIT_MATURITY`,
-            `SYNK_NVD_SCOPE`,
-            `SYNK_NVD_CONFIDENTIALITY_IMPACT`,
-            `SYNK_NVD_INTEGRITY_IMPACT`,
-            `SYNK_NVD_AVAILABILITY_IMPACT`,
+            `SNYK_NAME`,
+            `SNYK_PUBLISHED_DATE`,
+            `SNYK_HOW_TO_FIX`,
+            `SNYK_EXPLOIT_MATURITY`,
+            `SNYK_SCORE`,
+            `SNYK_ATTACK_COMPLEXITY`,
+            `SNYK_ATTACK_VECTOR`,
+            `SNYK_PRIVILEGES_REQUIRED`,
+            `SNYK_USER_INTERACTION`,
+            `SNYK_SCOPE`,
+            `SNYK_CONFIDENTIALITY_IMPACT`,
+            `SNYK_INTEGRITY_IMPACT`,
+            `SNYK_AVAILABILITY_IMPACT`,
+            `SNYK_NVD_SCORE`,
+            `SNYK_NVD_ATTACK_COMPLEXITY`,
+            `SNYK_NVD_ATTACK_VECTOR`,
+            `SNYK_NVD_PRIVILEGES_REQUIRED`,
+            `SNYK_NVD_USER_INTERACTION`,
+            `SNYK_NVD_EXPLOIT_MATURITY`,
+            `SNYK_NVD_SCOPE`,
+            `SNYK_NVD_CONFIDENTIALITY_IMPACT`,
+            `SNYK_NVD_INTEGRITY_IMPACT`,
+            `SNYK_NVD_AVAILABILITY_IMPACT`,
             `JIRA_TYPE`,
             `JIRA_PRIORITY`,
             `JIRA_VERSION_INTRODUCED`,
@@ -344,7 +519,7 @@ class Queries:
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s)"""
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
 
     @classmethod
     def insert_nvd_hyperlink(cls):
@@ -395,12 +570,13 @@ class Queries:
             `VULNERABILITY_ID`,
             `PRODUCT_TYPE`,
             `VENDOR`,
+            `PRODUCT`,
             `VERSION`,
             `UPDATE`,
             `EDITION`,
             `LANGUAGE`
             )
-            VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
 
     @classmethod
     def insert_cvedetails_affected_versions_by_product(cls):

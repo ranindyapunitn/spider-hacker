@@ -1,13 +1,13 @@
-from src.table_objects.nvd.nvd_data import NvdData
-from src.table_objects.nvd.nvd_hyperlink import NvdHyperlink
-from src.table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
-from src.table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
-from src.table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
-from src.table_objects.cvedetails.cvedetails_data import CvedetailsData
-from src.table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
-from src.table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
-from src.table_objects.snyk.snyk_data import SnykData
-from src.table_objects.jira.jira_data import JiraData
+from table_objects.nvd.nvd_data import NvdData
+from table_objects.nvd.nvd_hyperlink import NvdHyperlink
+from table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
+from table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
+from table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
+from table_objects.cvedetails.cvedetails_data import CvedetailsData
+from table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
+from table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
+from table_objects.snyk.snyk_data import SnykData
+from table_objects.jira.jira_data import JiraData
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
@@ -89,6 +89,13 @@ class CvePopulator:
         cvedetails_data = CvedetailsData()
         data_table = soup.find(lambda tag: tag.name=='table' and tag.has_attr('id') and tag['id']=="cvssscorestable") 
         data_table_rows = data_table.findAll(lambda tag: tag.name=='tr')
+
+        if soup.find("span", class_="datenote"):
+            datenote = soup.find("span", class_="datenote").contents[0].strip()
+            datenote_split = datenote.partition("Last")
+            if len(datenote_split) == 3:
+                cvedetails_data.cvedetails_published_date = datetime.strptime(datenote_split[0].partition("Date : ")[2].strip(), "%Y-%m-%d")
+                cvedetails_data.cvedetails_last_modified_date = datetime.strptime(datenote_split[2].partition("Date : ")[2].strip(), "%Y-%m-%d")
         
         if soup.find("div", class_="cvssbox"):
             cvedetails_data.cvedetails_score = soup.find("div", class_="cvssbox").string
@@ -148,20 +155,20 @@ class CvePopulator:
             for tr in trs:
                 affected_product = CvedetailsAffectedProduct()
                 tds = tr.findAll("td")
-                if len(td) > 1:
-                    affected_product.product_type = tds[1].string.strip()
-                if len(td) > 2:
-                    affected_product.vendor = tds[2].find("a").string.strip()
-                if len(td) > 3:
-                    affected_product.product = tds[3].find("a").string.strip()
-                if len(td) > 4:
-                    affected_product.version = tds[4].string.strip()
-                if len(td) > 5:
-                    affected_product.update = tds[5].string.strip()
-                if len(td) > 6:
-                    affected_product.edition = tds[6].string.strip()
-                if len(td) > 7:
-                    affected_product.language = tds[7].string.strip()
+                if len(tds) > 1:
+                    affected_product.product_type = tds[1].contents[0].strip()
+                if len(tds) > 2:
+                    affected_product.vendor = tds[2].find("a").contents[0].strip()
+                if len(tds) > 3:
+                    affected_product.product = tds[3].find("a").contents[0].strip()
+                if len(tds) > 4:
+                    affected_product.version = tds[4].contents[0].strip()
+                if len(tds) > 5:
+                    affected_product.update = tds[5].contents[0].strip()
+                if len(tds) > 6:
+                    affected_product.edition = tds[6].contents[0].strip()
+                if len(tds) > 7:
+                    affected_product.language = tds[7].contents[0].strip()
                 cvedetails_data.cvedetails_affected_products.append(affected_product)
 
         affected_versions_table = soup.find("table", id="vulnversconuttable")
@@ -170,12 +177,12 @@ class CvePopulator:
             for tr in trs:
                 affected_version = CvedetailsAffectedVersionsByProduct()
                 tds = tr.findAll("td")
-                if len(td) > 0:
+                if len(tds) > 0:
                     affected_version.vendor = tds[0].find("a").string.strip()
-                if len(td) > 1:
-                    affected_version.product = tds[1].find("a").string.strip()
-                if len(td) > 2:
-                    affected_version.vulnerable_versions = tds[2].string.strip()
+                if len(tds) > 1:
+                    affected_version.product = tds[1].find("a").contents[0].strip()
+                if len(tds) > 2:
+                    affected_version.vulnerable_versions = tds[2].contents[0].strip()
                 cvedetails_data.cvedetails_affected_versions.append(affected_version)
 
         hyperlinks_table = soup.find("table", id="vulnrefstable")
@@ -401,19 +408,19 @@ class CvePopulator:
             if len(soup.find("aui-badge", id="watcher-data").contents):
                 jira_data.watchers = soup.find("aui-badge", id="watcher-data").contents[0].strip()
 
-        date_created = soup.find("span", {"data-name" : "Created"})
-        if date_created:
-            if "ago" not in date_created.find("time").contents[0].strip():
-                jira_data.date_created = datetime.strptime(date_created.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
+        #date_created = soup.find("span", {"data-name" : "Created"})
+        #if date_created:
+        #    if "ago" not in date_created.find("time").contents[0].strip():
+        #        jira_data.date_created = datetime.strptime(date_created.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
 
-        date_updated = soup.find("span", {"data-name" : "Updated"})
-        if date_updated:
-            if "ago" not in date_updated.find("time").contents[0].strip():
-                jira_data.date_updated = datetime.strptime(date_updated.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
+        #date_updated = soup.find("span", {"data-name" : "Updated"})
+        #if date_updated:
+        #    if "ago" not in date_updated.find("time").contents[0].strip():
+        #        jira_data.date_updated = datetime.strptime(date_updated.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
 
-        date_resolved = soup.find("span", {"data-name" : "Resolved"})
-        if date_resolved:
-            if "ago" not in date_resolved.find("time").contents[0].strip():
-                jira_data.date_resolved = datetime.strptime(date_resolved.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
+        #date_resolved = soup.find("span", {"data-name" : "Resolved"})
+        #if date_resolved:
+        #    if "ago" not in date_resolved.find("time").contents[0].strip():
+        #        jira_data.date_resolved = datetime.strptime(date_resolved.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
 
         return jira_data

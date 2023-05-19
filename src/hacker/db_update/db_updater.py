@@ -2,10 +2,10 @@ from gevent import monkey as curious_george
 curious_george.patch_all(thread=False, select=False)
 import grequests
 from definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
-from src.db_manager.db_manager import DbManager
-from src.hacker.db_update.cve_populator import CvePopulator
-from src.hacker.db_update.link_collector import LinkCollector
-from src.table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from db_manager.db_manager import DbManager
+from hacker.db_update.cve_populator import CvePopulator
+from hacker.db_update.link_collector import LinkCollector
+from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
 import re
 import sys
 import time
@@ -63,6 +63,7 @@ class DbUpdater:
                 driver.set_page_load_timeout(WEBDRIVER_TIMEOUT)
                 driver.get(cve["snyk"])
                 soup = ""
+                cve_id = ""
                 try:
                     button_snyk = driver.find_element(by=By.XPATH, value='//button[@data-snyk-test="DetailsBox: expand"]')
                     button_snyk.click()
@@ -75,7 +76,9 @@ class DbUpdater:
                 except TimeoutException:
                     pass
 
-                snyk_data.append({"cve": cve, "soup": populator.populate_snyk_data(soup)})
+                if soup.find("a", id = re.compile(r"^CVE-")):
+                    cve_id = soup.find("a", id = re.compile(r"^CVE-")).contents[0].strip()
+                snyk_data.append({"cve": cve_id, "data": populator.populate_snyk_data(soup)})
             if cve["jira"] != "":
                 jira_links.append(cve["jira"])
 
@@ -83,8 +86,9 @@ class DbUpdater:
         nvd_results = grequests.map((grequests.get(u) for u in nvd_links), size=10)
         for page in nvd_results:
             soup = BeautifulSoup(page.text, "lxml")
-            cve = soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}).string.strip()
-            nvd_data.append({"cve" : cve, "data" : populator.populate_nvd_data(soup)})
+            if soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}):
+                cve = soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}).string.strip()
+                nvd_data.append({"cve" : cve, "data" : populator.populate_nvd_data(soup)})              
         #except:
             #pass
 
@@ -94,7 +98,7 @@ class DbUpdater:
             soup = BeautifulSoup(page.text, "lxml")
             h1 = soup.find("h1")
             cve = h1.find("a").contents[0].strip()
-            cvedetails_data.append({"cve" : cve, "data" : populator.populate_cvedetails_data(soup)})           
+            cvedetails_data.append({"cve" : cve, "data" : populator.populate_cvedetails_data(soup)})
         #except:
             #pass
 
@@ -152,7 +156,7 @@ class DbUpdater:
         jira_attachments = []
         jira_links = []
 
-        for vulnerability in cve_batch:
+        for vulnerability in cve_batch:           
             temp_vuln = (vulnerability.cve, vulnerability.fixed_commit_hash, datetime.now().isoformat(), \
                 vulnerability.nvd_data.nvd_description, vulnerability.nvd_data.nvd_published_date, \
                 vulnerability.nvd_data.nvd_last_modified_date, vulnerability.nvd_data.nvd_source, \
@@ -164,6 +168,7 @@ class DbUpdater:
                 vulnerability.nvd_data.nvd_cvss2_nist_severity, vulnerability.nvd_data.nvd_cvss2_nist_vector, \
                 vulnerability.nvd_data.nvd_cvss2_cna_name, vulnerability.nvd_data.nvd_cvss2_cna_score, \
                 vulnerability.nvd_data.nvd_cvss2_cna_severity, vulnerability.nvd_data.nvd_cvss2_cna_vector, \
+                vulnerability.cvedetails_data.cvedetails_published_date, vulnerability.cvedetails_data.cvedetails_last_modified_date, \
                 vulnerability.cvedetails_data.cvedetails_score, vulnerability.cvedetails_data.cvedetails_confidentiality_impact, \
                 vulnerability.cvedetails_data.cvedetails_integrity_impact, vulnerability.cvedetails_data.cvedetails_availability_impact, \
                 vulnerability.cvedetails_data.cvedetails_access_complexity, vulnerability.cvedetails_data.cvedetails_authentication, \
@@ -187,6 +192,7 @@ class DbUpdater:
                 vulnerability.jira_data.affected_customers, vulnerability.jira_data.watchers, \
                 vulnerability.jira_data.date_created, vulnerability.jira_data.date_updated, \
                 vulnerability.jira_data.date_resolved)           
+            
             vulnerabilities.append(temp_vuln)
 
             for link in vulnerability.nvd_data.nvd_hyperlinks:
@@ -206,7 +212,7 @@ class DbUpdater:
                 cvedetails_links.append(temp_link)
 
             for ap in vulnerability.cvedetails_data.cvedetails_affected_products:
-                temp_ap = (vulnerability.cve, ap.product_type, ap.vendor, \
+                temp_ap = (vulnerability.cve, ap.product_type, ap.vendor, ap.product, \
                     ap.version, ap.update, ap.edition, ap.language)
                 cvedetails_affected_products.append(temp_ap)
 
@@ -293,10 +299,14 @@ class DbUpdater:
 
             links = cve["links"]
             for link in links:
-                nvd = link["nvd"] if "nvd" in link else ""
-                cvedetails = link["cvedetails"] if "cvedetails" in link else ""
-                snyk = link["snyk"] if "snyk" in link else ""
-                jira = link["jira"] if "jira" in link else ""
+                if "nvd" in link:
+                    nvd = link["nvd"]
+                if "cvedetails" in link:
+                    cvedetails = link["cvedetails"]
+                if "snyk" in link:
+                    snyk = link["snyk"]
+                if "jira" in link:
+                    jira = link["jira"] 
 
             temp_cve = (cve["cve"], nvd, cvedetails, snyk, jira)
             cves_to_insert.append(temp_cve)
@@ -315,3 +325,31 @@ class DbUpdater:
             self.__insert_cve_objects(cves_to_download)
         else:
             print("Cache is empty, run populate_cache before trying to update the database")
+
+    def __print_vulnerability_snyk(self, vuln):
+        print("SNYK:")
+        print(vuln.snyk_name)
+        print(vuln.snyk_published_date)
+        print(vuln.snyk_cwe_id)
+        print(vuln.snyk_how_to_fix)
+        print(vuln.snyk_exploit_maturity)
+        print(vuln.snyk_score)
+        print(vuln.snyk_attack_complexity)
+        print(vuln.snyk_attack_vector)
+        print(vuln.snyk_privileges_required)
+        print(vuln.snyk_user_interaction)
+        print(vuln.snyk_scope)
+        print(vuln.snyk_confidentiality_impact)
+        print(vuln.snyk_integrity_impact)
+        print(vuln.snyk_availability_impact)
+        print(vuln.snyk_nvd_score)
+        print(vuln.snyk_nvd_attack_complexity)
+        print(vuln.snyk_nvd_attack_vector)
+        print(vuln.snyk_nvd_privileges_required)
+        print(vuln.snyk_nvd_user_interaction)
+        print(vuln.snyk_nvd_exploit_maturity)
+        print(vuln.snyk_nvd_scope)
+        print(vuln.snyk_nvd_confidentiality_impact)
+        print(vuln.snyk_nvd_integrity_impact)
+        print(vuln.snyk_nvd_availability_impact)
+        print(vuln.snyk_hyperlinks)

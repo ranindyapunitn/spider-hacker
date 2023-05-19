@@ -25,7 +25,7 @@ class LinkCollector:
             for cve in cve_codes:
                 cve_list_nvd.append({"cve" : cve, "nvd" : "https://nvd.nist.gov/vuln/detail/" + cve})
 
-            #if(len(cve_list_nvd) > 200):
+            #if(len(cve_list_nvd) > 10):
                 #break
 
         print("CVEs from NVD completed")
@@ -36,6 +36,7 @@ class LinkCollector:
         req = requests.get("https://www.cvedetails.com/browse-by-date.php")
         soup = BeautifulSoup(req.text, "lxml")
         year_links = [a['href'] for a in soup.findAll("a", href = re.compile(r"/vulnerabilities.html$"))]
+        year_links.reverse()
 
         cve_list_cvedetails = []
         for link in year_links:
@@ -51,7 +52,7 @@ class LinkCollector:
                 for cve in cve_codes:
                     cve_list_cvedetails.append({"cve" : cve, "cvedetails" : "https://www.cvedetails.com/cve/" + cve})
                 
-            #if(len(cve_list_cvedetails) > 200):
+            #if(len(cve_list_cvedetails) > 10):
                 #break
 
         print("CVEs from cvedetails completed")
@@ -134,10 +135,10 @@ class LinkCollector:
                 #break
 
         print("CVEs from jira completed")
-        return cve_list_jiral1a
+        return cve_list_jira
 
     def get_cve_to_insert(self):
-        cve_list =  self.__get_cve_to_insert_nvd() + self.__get_cve_to_insert_jira()
+        cve_list =  self.__get_cve_to_insert_snyk()
         #cve_list =  self.__get_cve_to_insert_nvd() + self.__get_cve_to_insert_cvedetails() + self.__get_cve_to_insert_snyk() + self.__get_cve_to_insert_jira()
 
         merge_by_keys = ['cve']
