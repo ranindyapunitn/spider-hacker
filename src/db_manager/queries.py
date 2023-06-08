@@ -78,6 +78,7 @@ class Queries:
             `SNYK_NVD_CONFIDENTIALITY_IMPACT`    TEXT            NULL,
             `SNYK_NVD_INTEGRITY_IMPACT`          TEXT            NULL,
             `SNYK_NVD_AVAILABILITY_IMPACT`       TEXT            NULL,
+            `SNYK_OVERVIEW`                      TEXT            NULL,
             `JIRA_TYPE`                          TEXT            NULL,
             `JIRA_PRIORITY`                      TEXT            NULL,
             `JIRA_VERSION_INTRODUCED`            TEXT            NULL,
@@ -306,6 +307,7 @@ class Queries:
             `SNYK_NVD_CONFIDENTIALITY_IMPACT`,
             `SNYK_NVD_INTEGRITY_IMPACT`,
             `SNYK_NVD_AVAILABILITY_IMPACT`,
+            `SNYK_OVERVIEW`,
             `JIRA_TYPE`,
             `JIRA_PRIORITY`,
             `JIRA_VERSION_INTRODUCED`,
@@ -319,9 +321,7 @@ class Queries:
             `JIRA_DATE_CREATED`,
             `JIRA_DATE_UPDATED`,
             `JIRA_DATE_RESOLVED`
-            FROM {}.`VULNERABILITIES`
-            WHERE `SNYK_NAME` <> ''
-            ORDER BY `SNYK_PUBLISHED_DATE` ASC"""
+            FROM {}.`VULNERABILITIES`"""
 
     @classmethod
     def get_nvd_hyperlinks(cls):
@@ -502,6 +502,7 @@ class Queries:
             `SNYK_NVD_CONFIDENTIALITY_IMPACT`,
             `SNYK_NVD_INTEGRITY_IMPACT`,
             `SNYK_NVD_AVAILABILITY_IMPACT`,
+            `SNYK_OVERVIEW`,
             `JIRA_TYPE`,
             `JIRA_PRIORITY`,
             `JIRA_VERSION_INTRODUCED`,
@@ -519,7 +520,7 @@ class Queries:
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
 
     @classmethod
     def insert_nvd_hyperlink(cls):

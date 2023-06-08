@@ -209,6 +209,21 @@ class CvePopulator:
             if how_to_fix:
                 snyk_data.snyk_how_to_fix = re.sub('<[^<]+?>', '', str(how_to_fix.find("p")))
 
+        main_block = soup.find("div", class_="vue--layout-container vuln-page__body-wrapper grid-wrapper")
+        if main_block:
+            left_block = main_block.find("div", class_="left")
+            if left_block:
+                h2_overview = [h2 for h2 in left_block.findAll("h2") if h2.contents[0].strip() == "Overview"]
+                if h2_overview:
+                    overview_block = h2_overview[0].find_next_siblings()
+                    if overview_block:
+                        overview_block = overview_block[0]
+                        if overview_block:
+                            overview = overview_block.find("div", class_="vue--markdown-to-html markdown-description")
+                            if overview:
+                                overview_content = ' '.join([str(e) for e in overview.contents])
+                                snyk_data.snyk_vulnerability_overview = re.sub('<[^<]+?>', '', overview_content)
+
         if soup.find(attrs={"data-snyk-test": "severity widget score"}):
             snyk_data.snyk_score = soup.find(attrs={"data-snyk-test": "severity widget score"}).get("data-snyk-test-score")
 

@@ -9,3 +9,5 @@ venv_spider-hacker/
 *.sublime-project
 *.sublime-workspace
 src/geckodriver.log
+src/plotter/
+test.py

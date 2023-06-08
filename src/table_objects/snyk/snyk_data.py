@@ -27,8 +27,8 @@ class SnykData:
         self.snyk_nvd_confidentiality_impact = ""
         self.snyk_nvd_integrity_impact = ""
         self.snyk_nvd_availability_impact = ""
-        #self.snyk_vulnerability_overview = ""
+        self.snyk_vulnerability_overview = ""
         #self.snyk_proof_of_concept = ""
-        #self.snyk_details = ""
+        self.snyk_details = ""
         self.snyk_hyperlinks = []
 

@@ -185,6 +185,7 @@ class DbUpdater:
                 vulnerability.snyk_data.snyk_nvd_user_interaction, vulnerability.snyk_data.snyk_nvd_exploit_maturity, \
                 vulnerability.snyk_data.snyk_nvd_scope, vulnerability.snyk_data.snyk_nvd_confidentiality_impact, \
                 vulnerability.snyk_data.snyk_nvd_integrity_impact, vulnerability.snyk_data.snyk_nvd_availability_impact, \
+                vulnerability.snyk_data.snyk_vulnerability_overview, \
                 vulnerability.jira_data.type, vulnerability.jira_data.priority, \
                 vulnerability.jira_data.version_introduced, vulnerability.jira_data.symptom_severity, \
                 vulnerability.jira_data.status, vulnerability.jira_data.resolution, \
