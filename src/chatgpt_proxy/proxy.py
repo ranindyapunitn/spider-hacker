@@ -93,7 +93,7 @@ def createVersionIntervals():
                 print("\n\n")
 
 def sendOtherPrompt():
-    openai.api_key = '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'
+    openai.api_key = ''
 
     prompt = """
         please provide, with sources, a description of what is a software vulnerability data source, like nvd, cvedetails or snyk."""
@@ -102,7 +102,7 @@ def sendOtherPrompt():
     print(completion.choices[0].message.content)
 
 def sendPrompt(cve_list):
-    openai.api_key = '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'
+    openai.api_key = ''
     chatgpt_response_list = []
     
     index = 1
