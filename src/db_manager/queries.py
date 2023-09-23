@@ -55,6 +55,7 @@ class Queries:
             `CVEDETAILS_AUTHENTICATION`          TEXT            NULL,
             `CVEDETAILS_GAINED_ACCESS`           TEXT            NULL,
             `CVEDETAILS_CWE_ID`                  TEXT            NULL,
+            `CVEDETAILS_VULNERABILITY_TYPES`     TEXT            NULL,
             `SNYK_NAME`                          TEXT            NULL,
             `SNYK_PUBLISHED_DATE`                DATETIME        NULL,
             `SNYK_HOW_TO_FIX`                    TEXT            NULL,
@@ -92,6 +93,7 @@ class Queries:
             `JIRA_DATE_CREATED`                  DATETIME        NULL,
             `JIRA_DATE_UPDATED`                  DATETIME        NULL,
             `JIRA_DATE_RESOLVED`                 DATETIME        NULL,
+            `MITRE_DATE`                         DATETIME        NULL,
             PRIMARY KEY (`CVE`)
             )"""
 
@@ -121,6 +123,18 @@ class Queries:
             `CWE_ID`                             TEXT            NULL,
             `CWE_NAME`                           TEXT            NULL,
             `SOURCE`                             TEXT            NULL,
+            PRIMARY KEY (`ID`)
+            )"""
+
+    @classmethod
+    def create_table_nvd_affected_configurations(cls):
+        return """CREATE TABLE {}.`NVD_AFFECTED_CONFIGURATIONS` (
+            `ID`                                 INT             NOT NULL    AUTO_INCREMENT,
+            `VULNERABILITY_ID`                   NVARCHAR(20)    NOT NULL,
+            `VERSION_FROM_INCLUDING`             TEXT            NULL,
+            `VERSION_FROM_EXCLUDING`             TEXT            NULL,
+            `VERSION_UPTO_INCLUDING`             TEXT            NULL,
+            `VERSION_UPTO_EXCLUDING`             TEXT            NULL,
             PRIMARY KEY (`ID`)
             )"""
 
@@ -284,6 +298,7 @@ class Queries:
             `CVEDETAILS_AUTHENTICATION`,
             `CVEDETAILS_GAINED_ACCESS`,
             `CVEDETAILS_CWE_ID`,
+            `CVEDETAILS_VULNERABILITY_TYPES`,
             `SNYK_NAME`,
             `SNYK_PUBLISHED_DATE`,
             `SNYK_HOW_TO_FIX`,
@@ -320,7 +335,8 @@ class Queries:
             `JIRA_WATCHERS`,
             `JIRA_DATE_CREATED`,
             `JIRA_DATE_UPDATED`,
-            `JIRA_DATE_RESOLVED`
+            `JIRA_DATE_RESOLVED`,
+            `MITRE_DATE`
             FROM {}.`VULNERABILITIES`"""
 
     @classmethod
@@ -347,7 +363,10 @@ class Queries:
     @classmethod
     def get_nvd_affected_configuration(cls):
         return """SELECT `VULNERABILITY_ID`,
-            `CONFIGURATION_ID`
+            `VERSION_FROM_INCLUDING`,
+            `VERSION_FROM_EXCLUDING`,
+            `VERSION_UPTO_INCLUDING`,
+            `VERSION_UPTO_EXCLUDING`,
             FROM {}.`NVD_AFFECTED_CONFIGURATIONS`"""
 
     @classmethod
@@ -479,6 +498,7 @@ class Queries:
             `CVEDETAILS_AUTHENTICATION`,
             `CVEDETAILS_GAINED_ACCESS`,
             `CVEDETAILS_CWE_ID`,
+            `CVEDETAILS_VULNERABILITY_TYPES`,
             `SNYK_NAME`,
             `SNYK_PUBLISHED_DATE`,
             `SNYK_HOW_TO_FIX`,
@@ -515,12 +535,13 @@ class Queries:
             `JIRA_WATCHERS`,
             `JIRA_DATE_CREATED`,
             `JIRA_DATE_UPDATED`,
-            `JIRA_DATE_RESOLVED`
+            `JIRA_DATE_RESOLVED`,
+            `MITRE_DATE`
             )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
 
     @classmethod
     def insert_nvd_hyperlink(cls):
@@ -553,9 +574,12 @@ class Queries:
     def insert_nvd_affected_configuration(cls):
         return """INSERT INTO {}.`NVD_AFFECTED_CONFIGURATIONS`(
             `VULNERABILITY_ID`,
-            `CONFIGURATION_ID`
+            `VERSION_FROM_INCLUDING`,
+            `VERSION_FROM_EXCLUDING`,
+            `VERSION_UPTO_INCLUDING`,
+            `VERSION_UPTO_EXCLUDING`
             )
-            VALUES (%s, %s)"""
+            VALUES (%s, %s, %s, %s, %s)"""
 
     @classmethod
     def insert_cvedetails_hyperlinks(cls):

@@ -25,7 +25,7 @@ class LinkCollector:
             for cve in cve_codes:
                 cve_list_nvd.append({"cve" : cve, "nvd" : "https://nvd.nist.gov/vuln/detail/" + cve})
 
-            #if(len(cve_list_nvd) > 10):
+            #if(len(cve_list_nvd) > 2000):
                 #break
 
         print("CVEs from NVD completed")
@@ -81,8 +81,8 @@ class LinkCollector:
                 cve_code = cve_container.find("a", class_="vue--anchor").contents[0]
                 cve_list_snyk.append({"cve" : cve_code, "snyk" : "https://security.snyk.io" + link})
 
-            if(len(cve_list_snyk) > 10):
-                break
+            #if(len(cve_list_snyk) > 10):
+                #break
 
         print("CVEs from snyk completed")
         return cve_list_snyk#[:200]
@@ -138,7 +138,7 @@ class LinkCollector:
         return cve_list_jira
 
     def get_cve_to_insert(self):
-        #cve_list =  self.__get_cve_to_insert_snyk()
+        #cve_list =  self.__get_nvd_to_insert_cvedetails()
         cve_list =  self.__get_cve_to_insert_nvd() + self.__get_cve_to_insert_cvedetails() + self.__get_cve_to_insert_snyk() + self.__get_cve_to_insert_jira()
 
         merge_by_keys = ['cve']

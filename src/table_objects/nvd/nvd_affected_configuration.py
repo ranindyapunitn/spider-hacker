@@ -1,5 +1,7 @@
 class NvdAffectedConfiguration:
 
     def __init__(self):
-        self.configuration_id = ""
-        self.affected_configuration_descriptions = []
+        self.version_from_including = ""
+        self.version_from_excluding = ""
+        self.version_upto_including = ""
+        self.version_upto_excluding = ""

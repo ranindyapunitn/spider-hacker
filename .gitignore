@@ -10,4 +10,7 @@ venv_spider-hacker/
 *.sublime-workspace
 src/geckodriver.log
 src/plotter/
-test.py
+src/test.py
+src/chatgpt_proxy/prospector_cve_links_list.txt
+src/chatgpt_proxy/prospector_cve_list_sorted.txt
+src/chatgpt_proxy/chatgpt_response_test.txt

@@ -2,18 +2,17 @@ import mysql.connector
 import sys
 from mysql.connector.errors import DatabaseError
 from mysql.connector import errorcode
-from db_manager.queries import Queries
-from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
-from table_objects.nvd.nvd_data import NvdData
-from table_objects.nvd.nvd_hyperlink import NvdHyperlink
-from table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
-from table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
-from table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
-from table_objects.cvedetails.cvedetails_data import CvedetailsData
-from table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
-from table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
-from table_objects.snyk.snyk_data import SnykData
-from table_objects.jira.jira_data import JiraData
+from src.db_manager.queries import Queries
+from src.table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from src.table_objects.nvd.nvd_data import NvdData
+from src.table_objects.nvd.nvd_hyperlink import NvdHyperlink
+from src.table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
+from src.table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
+from src.table_objects.cvedetails.cvedetails_data import CvedetailsData
+from src.table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
+from src.table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
+from src.table_objects.snyk.snyk_data import SnykData
+from src.table_objects.jira.jira_data import JiraData
 
 
 """
@@ -38,6 +37,7 @@ class DbManager:
         tables["nvd_hyperlinks"] = (Queries.create_table_nvd_hyperlinks())
         tables["nvd_tags"] = (Queries.create_table_nvd_tags())
         tables["nvd_weakness_enumeration"] = (Queries.create_table_nvd_weakness_enumeration())
+        tables["nvd_affected_configurations"] = (Queries.create_table_nvd_affected_configurations())
         tables["cvedetails_affected_products"] = (Queries.create_table_cvedetails_affected_products())
         tables["cvedetails_affected_versions_by_product"] = (Queries.create_table_cvedetails_affected_versions_by_product())
         tables["cvedetails_hyperlinks"] = (Queries.create_table_cvedetails_hyperlinks())
@@ -203,6 +203,7 @@ class DbManager:
                 cve["cvedetails"] = row[2]
                 cve["snyk"] = row[3]
                 cve["jira"] = row[4]
+                cve["mitre"] = "https://cve.mitre.org/cgi-bin/cvename.cgi?name=" + row[0]
 
                 cves.append(cve)
         except mysql.connector.Error as err:
@@ -273,6 +274,18 @@ class DbManager:
             query = Queries.insert_nvd_weakness_enumeration().format(self.schema_name)
             
             cursor.executemany(query, we_list)
+            self.connection.commit()
+        except mysql.connector.Error as err:
+            print(err.msg)
+
+        cursor.close()
+
+    def insert_nvd_affected_configuration(self, ac_list):
+        cursor = self.connection.cursor()
+        try:
+            query = Queries.insert_nvd_affected_configuration().format(self.schema_name)
+            
+            cursor.executemany(query, ac_list)
             self.connection.commit()
         except mysql.connector.Error as err:
             print(err.msg)

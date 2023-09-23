@@ -1,13 +1,13 @@
-from table_objects.nvd.nvd_data import NvdData
-from table_objects.nvd.nvd_hyperlink import NvdHyperlink
-from table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
-from table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
-from table_objects.nvd.nvd_affected_configuration_description import NvdAffectedConfigurationDescription
-from table_objects.cvedetails.cvedetails_data import CvedetailsData
-from table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
-from table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
-from table_objects.snyk.snyk_data import SnykData
-from table_objects.jira.jira_data import JiraData
+from src.table_objects.nvd.nvd_data import NvdData
+from src.table_objects.nvd.nvd_hyperlink import NvdHyperlink
+from src.table_objects.nvd.nvd_weakness_enumeration import NvdWeaknessEnumeration
+from src.table_objects.nvd.nvd_affected_configuration import NvdAffectedConfiguration
+from src.table_objects.cvedetails.cvedetails_data import CvedetailsData
+from src.table_objects.cvedetails.cvedetails_affected_product import CvedetailsAffectedProduct
+from src.table_objects.cvedetails.cvedetails_affected_versions_by_product import CvedetailsAffectedVersionsByProduct
+from src.table_objects.snyk.snyk_data import SnykData
+from src.table_objects.jira.jira_data import JiraData
+from src.table_objects.mitre.mitre_data import MitreData
 from bs4 import BeautifulSoup
 from datetime import datetime
 import re
@@ -82,6 +82,34 @@ class CvePopulator:
                     # Removes non-printable characters and newline
                     weakness_enumeration.source = bytes.decode(cwe_sources[i].text.encode("ascii", errors="ignore")).strip("\n")
                 nvd_data.nvd_weakness_enumeration.append(weakness_enumeration)
+
+        vulnerable_elements = soup.findAll(class_="vulnerable")
+        for i in range(len(vulnerable_elements)):
+            affected_configuration = NvdAffectedConfiguration()
+
+            start_range_element = vulnerable_elements[i].find(attrs={"data-testid": re.compile(r"start-range$")})
+            if start_range_element:
+                from_string = re.sub('<[^<]+?>', '', str(start_range_element))
+                partitions = from_string.partition(")")
+                if partitions and len(partitions) > 2:
+                    if "including" in from_string.partition(")")[0].strip():                   
+                        affected_configuration.version_from_including = from_string.partition(")")[2].strip()
+                    elif "excluding" in from_string.partition(")")[0].strip():                   
+                        affected_configuration.version_from_excluding = from_string.partition(")")[2].strip()
+
+            end_range_element = vulnerable_elements[i].find(attrs={"data-testid": re.compile(r"end-range$")})
+            if end_range_element:
+                end_string = re.sub('<[^<]+?>', '', str(end_range_element))
+                partitions = end_string.partition(")")
+                if partitions and len(partitions) > 2:
+                    if "including" in end_string.partition(")")[0].strip():                   
+                        affected_configuration.version_upto_including = end_string.partition(")")[2].strip()
+                    elif "excluding" in end_string.partition(")")[0].strip():                   
+                        affected_configuration.version_upto_excluding = end_string.partition(")")[2].strip()
+            
+            if affected_configuration.version_upto_including or affected_configuration.version_upto_excluding \
+                or affected_configuration.version_from_including or affected_configuration.version_from_excluding:
+                nvd_data.nvd_affected_configurations.append(affected_configuration)            
         
         return nvd_data
 
@@ -141,7 +169,7 @@ class CvePopulator:
             td = row_vulnerability_types.find("td")
             if td:
                 for span in td.findAll("span"):       
-                    cvedetails_data.cvedetails_vulnerability_types.append(span.text)
+                    cvedetails_data.cvedetails_vulnerability_types = cvedetails_data.cvedetails_vulnerability_types + span.text + "|"
 
         if len(data_table_rows) > 8:
             row_cwe_id = data_table_rows[8]
@@ -257,8 +285,8 @@ class CvePopulator:
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: Privileges Required"}):
                 snyk_privileges_required_block = snyk_block.find(attrs={"data-snyk-test": "CvssDetailsItem: Privileges Required"})
                 if snyk_privileges_required_block:
-                    if snyk_privileges_required_block.find("strong"):
-                        snyk_data.snyk_privileges_required= snyk_privileges_required_block.find("strong").string.strip()
+                    if snyk_privileges_required_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_privileges_required = snyk_privileges_required_block.find("span", class_="vue--badge__text").string.strip()
 
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: User Interaction"}):
                 snyk_user_interaction_block = snyk_block.find(attrs={"data-snyk-test": "CvssDetailsItem: User Interaction"})
@@ -275,14 +303,23 @@ class CvePopulator:
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: Confidentiality"}):
                 snyk_confidentiality_block = snyk_block.find(attrs={"data-snyk-test": "CvssDetailsItem: Confidentiality"})
                 if snyk_confidentiality_block:
-                    if snyk_confidentiality_block.find("strong"):
-                        snyk_data.snyk_confidentiality_impact = snyk_confidentiality_block.find("strong").string.strip()
+                    if snyk_confidentiality_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_confidentiality_impact = snyk_confidentiality_block.find("span", class_="vue--badge__text").string.strip()
 
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: Integrity"}):
                 snyk_integrity_block = snyk_block.find(attrs={"data-snyk-test": "CvssDetailsItem: Integrity"})
                 if snyk_integrity_block:
-                    if snyk_integrity_block.find("strong"):
-                        snyk_data.snyk_integrity_impact = snyk_integrity_block.find("strong").string.strip()
+                    if snyk_integrity_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_integrity_impact = snyk_integrity_block.find("span", class_="vue--badge__text").string.strip()
+
+        threat_intelligence_block = soup.find("div", class_="threat-intelligence-detail")
+
+        if threat_intelligence_block:
+            if soup.find(attrs={"data-snyk-test": "exploit-item"}):
+                exploit_maturity_block = threat_intelligence_block.find(attrs={"data-snyk-test": "exploit-item"})
+                if exploit_maturity_block:
+                    if exploit_maturity_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_exploit_maturity = exploit_maturity_block.find("span", class_="vue--badge__text").string.strip()
 
         vendor_block = soup.find("div", class_="vendorcvss")
 
@@ -317,9 +354,9 @@ class CvePopulator:
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: Privileges Required"}):
                 vendor_privileges_required_block = vendor_block.find(attrs={"data-snyk-test": "CvssDetailsItem: Privileges Required"})
                 if vendor_privileges_required_block:
-                    if vendor_privileges_required_block.find("strong"):
-                        snyk_data.snyk_nvd_privileges_required = vendor_privileges_required_block.find("strong").string.strip()
-    
+                    if vendor_privileges_required_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_nvd_privileges_required = vendor_privileges_required_block.find("span", class_="vue--badge__text").string.strip()
+
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: User Interaction"}):
                 vendor_user_interaction_block = vendor_block.find(attrs={"data-snyk-test": "CvssDetailsItem: User Interaction"})
                 if vendor_user_interaction_block:
@@ -335,14 +372,14 @@ class CvePopulator:
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: Confidentiality"}):
                 vendor_confidentiality_block = vendor_block.find(attrs={"data-snyk-test": "CvssDetailsItem: Confidentiality"})
                 if vendor_confidentiality_block:
-                    if vendor_confidentiality_block.find("strong"):
-                        snyk_data.snyk_nvd_confidentiality_impact = vendor_confidentiality_block.find("strong").string.strip()
+                    if vendor_confidentiality_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_nvd_confidentiality_impact = vendor_confidentiality_block.find("span", class_="vue--badge__text").string.strip()
             
             if soup.find(attrs={"data-snyk-test": "CvssDetailsItem: Integrity"}):
                 vendor_integrity_block = vendor_block.find(attrs={"data-snyk-test": "CvssDetailsItem: Integrity"})
                 if vendor_integrity_block:
-                    if vendor_integrity_block.find("strong"):
-                        snyk_data.snyk_nvd_integrity_impact = vendor_integrity_block.find("strong").string.strip()
+                    if vendor_integrity_block.find("span", class_="vue--badge__text"):
+                        snyk_data.snyk_nvd_integrity_impact = vendor_integrity_block.find("span", class_="vue--badge__text").string.strip()
 
         container = soup.find("div", class_="vue--layout-container vuln-page__body-wrapper grid-wrapper")
         if container:
@@ -369,12 +406,12 @@ class CvePopulator:
         for element in issue_elements:
             if index == 0:
                 jira_data.type = element.find("span").contents[2].strip()
-            elif index == 1:
-                jira_data.status = element.find('span', {"data-tooltip": True}).contents[0].strip()
+            #elif index == 1:
+                #jira_data.status = element.find('span', {"data-tooltip": True}).contents[0].strip()
             elif index == 2:
                 jira_data.priority = element.find("span").contents[2].strip()
-            elif index == 3:
-                jira_data.resolution = element.find("span", id="resolution-val").contents[0].strip()
+            #elif index == 3:
+                #jira_data.resolution = element.find("span", id="resolution-val").contents[0].strip()
             elif index == 4:
                 version_fields = element.findAll("span", id="versions-field")
                 for version in version_fields:                   
@@ -439,3 +476,14 @@ class CvePopulator:
         #        jira_data.date_resolved = datetime.strptime(date_resolved.find("time").contents[0].strip(), "%d/%b/%Y %I:%M %p")
 
         return jira_data
+
+    def populate_mitre_data(self, soup):
+        mitre_data = MitreData()
+
+        elem_date = soup.find("b",text=re.compile(r"^20"))
+        if elem_date:
+            date = elem_date.text
+            if date:
+                mitre_data.mitre_date = datetime.strptime(date,'%Y%m%d')
+
+        return mitre_data

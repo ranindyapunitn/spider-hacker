@@ -1,9 +1,9 @@
 #import agrparse
-from db_manager.db_manager import DbManager
-from hacker.db_update.db_updater import DbUpdater
-from hacker.db_create.db_creator import DbCreator
-from hacker.db_delete.db_deleter import DbDeleter
-from hacker.db_dump.db_dumper import DbDumper
+from src.db_manager.db_manager import DbManager
+from src.hacker.db_update.db_updater import DbUpdater
+from src.hacker.db_create.db_creator import DbCreator
+from src.hacker.db_delete.db_deleter import DbDeleter
+from src.hacker.db_dump.db_dumper import DbDumper
 from wakepy import set_keepawake, unset_keepawake
 import argparse
 import time

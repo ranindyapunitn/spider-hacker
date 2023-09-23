@@ -2,10 +2,10 @@ from gevent import monkey as curious_george
 curious_george.patch_all(thread=False, select=False)
 import grequests
 from definitions import BATCH_SIZE, REQUESTS_TIMEOUT, WEBDRIVER_TIMEOUT
-from db_manager.db_manager import DbManager
-from hacker.db_update.cve_populator import CvePopulator
-from hacker.db_update.link_collector import LinkCollector
-from table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
+from src.db_manager.db_manager import DbManager
+from src.hacker.db_update.cve_populator import CvePopulator
+from src.hacker.db_update.link_collector import LinkCollector
+from src.table_objects.vulnerability.vulnerability_info import VulnerabilityInfo
 import re
 import sys
 import time
@@ -44,16 +44,30 @@ class DbUpdater:
         snyk_data = []
         jira_links = []
         jira_data = []
+        mitre_links = []
+        mitre_data = []
 
         for cve in cves:
             cve_list.append(cve["cve"])
-            if cve["nvd"] != "":
-                nvd_links.append(cve["nvd"])
-            if cve["cvedetails"] != "":
+            if cve["nvd"]:
+                #nvd_links.append(cve["nvd"])
+
+                driver_exe = 'chromedriver'
+                options = Options()
+                options.add_argument("--headless")
+                options.add_experimental_option('excludeSwitches', ['enable-logging'])
+                service = Service(log_path=path.devnull)
+                driver = webdriver.Chrome(driver_exe, options=options, service=service)
+                driver.set_page_load_timeout(WEBDRIVER_TIMEOUT)
+                driver.get(cve["nvd"])
+                soup = BeautifulSoup(driver.page_source, 'lxml')
+                if soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}):
+                    cve_id = soup.find(attrs={"data-testid": "vuln-cve-dictionary-entry"}).string.strip()
+                    nvd_data.append({"cve" : cve_id, "data" : populator.populate_nvd_data(soup)})         
+            if cve["cvedetails"]:
                 cvedetails_links.append(cve["cvedetails"])
             # Multithread requests are not used with snyk because manual clicking is needed
-            if cve["snyk"] != "":
-                pass
+            if cve["snyk"]:
                 driver_exe = 'chromedriver'
                 options = Options()
                 options.add_argument("--headless")
@@ -79,8 +93,10 @@ class DbUpdater:
                 if soup.find("a", id = re.compile(r"^CVE-")):
                     cve_id = soup.find("a", id = re.compile(r"^CVE-")).contents[0].strip()
                 snyk_data.append({"cve": cve_id, "data": populator.populate_snyk_data(soup)})
-            if cve["jira"] != "":
+            if cve["jira"]:
                 jira_links.append(cve["jira"])
+            if cve["mitre"]:
+                mitre_links.append(cve["mitre"])
 
         #try:
         nvd_results = grequests.map((grequests.get(u) for u in nvd_links), size=10)
@@ -121,6 +137,16 @@ class DbUpdater:
         #except:
             #pass
 
+        mitre_results = grequests.map((grequests.get(u) for u in mitre_links), size=10)
+        for page in mitre_results:
+            soup = BeautifulSoup(page.text, "lxml")
+            cve = ""
+            elem_cve = soup.find("h2",text=re.compile(r"^CVE-"))
+            if elem_cve:
+                cve = elem_cve.text
+
+            mitre_data.append({"cve" : cve, "data" : populator.populate_mitre_data(soup)})
+
         for cve in cve_list:
             vuln = VulnerabilityInfo()
             vuln.cve = cve
@@ -132,6 +158,8 @@ class DbUpdater:
                 vuln.snyk_data = next(x["data"] for x in snyk_data if x["cve"] == cve)
             if any(x["cve"] == cve for x in jira_data):
                 vuln.jira_data = next(x["data"] for x in jira_data if x["cve"] == cve)
+            if any(x["cve"] == cve for x in mitre_data):
+                vuln.mitre_data = next(x["data"] for x in mitre_data if x["cve"] == cve)
 
             vuln_list.append(vuln)
 
@@ -145,6 +173,7 @@ class DbUpdater:
         nvd_links = []
         nvd_tags = []
         nvd_weakness_enumerations = []
+        nvd_affected_configurations = []
         cvedetails_links = []
         cvedetails_affected_products = []
         cvedetails_affected_versions_by_product = []
@@ -156,7 +185,7 @@ class DbUpdater:
         jira_attachments = []
         jira_links = []
 
-        for vulnerability in cve_batch:           
+        for vulnerability in cve_batch:
             temp_vuln = (vulnerability.cve, vulnerability.fixed_commit_hash, datetime.now().isoformat(), \
                 vulnerability.nvd_data.nvd_description, vulnerability.nvd_data.nvd_published_date, \
                 vulnerability.nvd_data.nvd_last_modified_date, vulnerability.nvd_data.nvd_source, \
@@ -173,6 +202,7 @@ class DbUpdater:
                 vulnerability.cvedetails_data.cvedetails_integrity_impact, vulnerability.cvedetails_data.cvedetails_availability_impact, \
                 vulnerability.cvedetails_data.cvedetails_access_complexity, vulnerability.cvedetails_data.cvedetails_authentication, \
                 vulnerability.cvedetails_data.cvedetails_gained_access, vulnerability.cvedetails_data.cvedetails_cwe_id, \
+                vulnerability.cvedetails_data.cvedetails_vulnerability_types, \
                 vulnerability.snyk_data.snyk_name, vulnerability.snyk_data.snyk_published_date, \
                 vulnerability.snyk_data.snyk_how_to_fix, \
                 vulnerability.snyk_data.snyk_exploit_maturity, vulnerability.snyk_data.snyk_score, \
@@ -192,7 +222,7 @@ class DbUpdater:
                 vulnerability.jira_data.assignee, vulnerability.jira_data.reporter, \
                 vulnerability.jira_data.affected_customers, vulnerability.jira_data.watchers, \
                 vulnerability.jira_data.date_created, vulnerability.jira_data.date_updated, \
-                vulnerability.jira_data.date_resolved)           
+                vulnerability.jira_data.date_resolved, vulnerability.mitre_data.mitre_date)           
             
             vulnerabilities.append(temp_vuln)
 
@@ -207,6 +237,11 @@ class DbUpdater:
             for we in vulnerability.nvd_data.nvd_weakness_enumeration:
                 temp_we = (vulnerability.cve, we.cwe_id, we.cwe_name, we.source)
                 nvd_weakness_enumerations.append(temp_we)
+
+            for ac in vulnerability.nvd_data.nvd_affected_configurations:
+                temp_ac = (vulnerability.cve, ac.version_from_including, ac.version_from_excluding, \
+                    ac.version_upto_including, ac.version_upto_excluding)
+                nvd_affected_configurations.append(temp_ac)
 
             for link in vulnerability.cvedetails_data.cvedetails_hyperlinks:
                 temp_link = (vulnerability.cve, link)
@@ -255,6 +290,7 @@ class DbUpdater:
         manager.insert_nvd_hyperlinks(nvd_links)
         manager.insert_nvd_tags(nvd_tags)
         manager.insert_nvd_weakness_enumeration(nvd_weakness_enumerations)
+        manager.insert_nvd_affected_configuration(nvd_affected_configurations)
         manager.insert_cvedetails_hyperlinks(cvedetails_links)
         manager.insert_cvedetails_affected_products(cvedetails_affected_products)
         manager.insert_cvedetails_affected_versions_by_product(cvedetails_affected_versions_by_product)
