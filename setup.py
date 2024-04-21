@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 setup(
     name="spider-hacker",
     version="1.0.0",
-    long_description=README,
+    long_description="README.md",
     long_description_content_type="text/markdown",
     url="https://github.com/mgiambi/spider-hacker",
     author="Michael Giambi",
